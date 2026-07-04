@@ -1,6 +1,22 @@
 import { supabase } from "../supabase.js";
 import { mapAdministrador } from "./mappers.js";
 
+export async function insertAdministrador(admin) {
+  const row = {
+    nome: admin.nome,
+    email: admin.email,
+    tipo: admin.tipo,
+    ativo: true,
+  };
+  const { data, error } = await supabase
+    .from("administradores")
+    .insert(row)
+    .select("*")
+    .single();
+  if (error) throw error;
+  return mapAdministrador(data);
+}
+
 export async function fetchAdministradores() {
   const { data, error } = await supabase
     .from("administradores")

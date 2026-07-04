@@ -67,16 +67,83 @@ export function renderCalendar() {
     .join("");
 }
 
-export function render(showPersonPhotoFn) {
-  const tp = document.getElementById("tabelaPessoas");
-  if (tp) {
-    tp.innerHTML =
-      state.pessoas
-        .map(
-          (p) => `<tr><td data-label="Nome"><b>${p.nome}</b></td><td data-label="Função">${p.funcao}</td><td data-label="Nº">${p.numero}</td><td data-label="Código QR">${p.codigo}</td><td data-label="QR"><button onclick="viewQRCode('${p.id}')">Ver</button></td><td data-label="Estado"><span class="badge ${p.ativo ? "" : "off"}">${p.ativo ? "Ativo" : "Inativo"}</span></td><td data-label="Ações"><div class="actions-cell"><button onclick="toggleStatus('${p.id}')">${p.ativo ? "Desativar" : "Ativar"}</button><button onclick="deletePerson('${p.id}')">Apagar</button></div></td></tr>`
-        )
-        .join("") || "<tr><td colspan='6'>Sem pessoas.</td></tr>";
+function comparePessoas(a, b, field) {
+  if (field === "nome") return a.nome.localeCompare(b.nome, "pt");
+  if (field === "funcao") return a.funcao.localeCompare(b.funcao, "pt");
+  if (field === "codigo") return a.codigo.localeCompare(b.codigo, "pt");
+  if (field === "ativo") return (a.ativo === b.ativo ? 0 : a.ativo ? -1 : 1);
+  if (field === "numero") {
+    const na = parseInt(String(a.numero).replace(/\D/g, ""), 10);
+    const nb = parseInt(String(b.numero).replace(/\D/g, ""), 10);
+    if (!Number.isNaN(na) && !Number.isNaN(nb) && String(a.numero) !== "—" && String(b.numero) !== "—") {
+      return na - nb;
+    }
+    return String(a.numero).localeCompare(String(b.numero), "pt", { numeric: true });
   }
+  return 0;
+}
+
+function getSortedPessoas() {
+  const { sort, dir } = state.pessoasTable;
+  const list = [...state.pessoas];
+  const mul = dir === "asc" ? 1 : -1;
+  list.sort((a, b) => comparePessoas(a, b, sort) * mul);
+  return list;
+}
+
+export function renderPessoas() {
+  const tp = document.getElementById("tabelaPessoas");
+  if (!tp) return;
+
+  const sorted = getSortedPessoas();
+  const { pageSize } = state.pessoasTable;
+  const total = sorted.length;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  let page = state.pessoasTable.page;
+  if (page > totalPages) page = totalPages;
+  if (page < 1) page = 1;
+  state.pessoasTable.page = page;
+
+  const start = (page - 1) * pageSize;
+  const slice = sorted.slice(start, start + pageSize);
+
+  tp.innerHTML =
+    slice
+      .map(
+        (p) =>
+          `<tr><td data-label="Nome"><b>${p.nome}</b></td><td data-label="Função">${p.funcao}</td><td data-label="Nº">${p.numero}</td><td data-label="Código QR">${p.codigo}</td><td data-label="QR"><button onclick="viewQRCode('${p.id}')">Ver</button></td><td data-label="Estado"><span class="badge ${p.ativo ? "" : "off"}">${p.ativo ? "Ativo" : "Inativo"}</span></td><td data-label="Ações"><div class="actions-cell"><button onclick="toggleStatus('${p.id}')">${p.ativo ? "Desativar" : "Ativar"}</button><button onclick="deletePerson('${p.id}')">Apagar</button></div></td></tr>`
+      )
+      .join("") || `<tr><td colspan="7">Sem pessoas.</td></tr>`;
+
+  const sortLabels = { nome: "Nome", funcao: "Função", numero: "Nº", codigo: "Código QR", ativo: "Estado" };
+  const arrow = state.pessoasTable.dir === "asc" ? "▲" : "▼";
+  document.querySelectorAll(".pessoas-table .th-sort").forEach((th) => {
+    const field = th.dataset.sort;
+    const label = sortLabels[field] || field;
+    const active = field === state.pessoasTable.sort;
+    th.classList.toggle("active", active);
+    th.innerHTML = active ? `${label}<span class="sort-arrow">${arrow}</span>` : label;
+  });
+
+  const info = document.getElementById("pessoasPageInfo");
+  if (info) {
+    if (!total) {
+      info.textContent = "Nenhuma pessoa registada";
+    } else {
+      const from = start + 1;
+      const to = Math.min(start + pageSize, total);
+      info.textContent = `${from}–${to} de ${total} · Página ${page} de ${totalPages}`;
+    }
+  }
+
+  const prev = document.getElementById("pessoasPrev");
+  const next = document.getElementById("pessoasNext");
+  if (prev) prev.disabled = page <= 1;
+  if (next) next.disabled = page >= totalPages;
+}
+
+export function render(showPersonPhotoFn) {
+  renderPessoas();
   const tr = document.getElementById("tabelaRegistos");
   if (tr) {
     tr.innerHTML =
