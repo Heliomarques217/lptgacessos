@@ -2,9 +2,27 @@ import { supabase } from "../supabase.js";
 import { state } from "../state.js";
 import { fetchAdministradorByEmail } from "../data/administradores.js";
 
+function authErrorMessage(error) {
+  const code = error?.code || "";
+  const msg = error?.message || "";
+  if (code === "invalid_credentials" || msg.includes("Invalid login credentials")) {
+    return (
+      "Email ou senha incorrectos. O utilizador tem de existir em Supabase → Authentication → Users " +
+      "(não basta a tabela administradores). Pede ao admin para criar o acesso ou repor a senha."
+    );
+  }
+  if (code === "email_not_confirmed" || msg.includes("Email not confirmed")) {
+    return (
+      "Email ainda não confirmado. No Supabase → Authentication → Users, abre o utilizador e confirma o email, " +
+      "ou abre o link de confirmação enviado para a caixa de correio."
+    );
+  }
+  return msg || "Não foi possível entrar.";
+}
+
 export async function login(email, password) {
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) throw error;
+  if (error) throw new Error(authErrorMessage(error));
   const admin = await fetchAdministradorByEmail(email.trim().toLowerCase());
   if (!admin) {
     await supabase.auth.signOut();

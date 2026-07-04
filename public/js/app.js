@@ -1,10 +1,11 @@
 import { isConfigured } from "./supabase.js";
 import { state } from "./state.js";
 import { fetchPessoas, insertPessoa, updatePessoa, deletePessoa as removePessoa } from "./data/pessoas.js";
-import { fetchJornadas } from "./data/jornadas.js";
+import { ensureCalendarioOficial } from "./data/jornadas.js";
 import { fetchEntradas, insertEntrada, findEntrada } from "./data/entradas.js";
 import {
   fetchAdministradores,
+  insertAdministrador,
   updateAdministrador,
   deleteAdministrador,
 } from "./data/administradores.js";
@@ -29,16 +30,22 @@ async function loadAllData() {
     alert("Configura SUPABASE_URL e SUPABASE_ANON_KEY em public/js/config.js");
     return;
   }
-  state.jornadas = await fetchJornadas();
-  state.pessoas = await fetchPessoas();
-  state.administradores = await fetchAdministradores();
-  state.entradas = await fetchEntradas();
+  state.jornadas = await ensureCalendarioOficial();
+  try {
+    state.pessoas = await fetchPessoas();
+    state.administradores = await fetchAdministradores();
+    state.entradas = await fetchEntradas();
+  } catch (e) {
+    console.error(e);
+    throw e;
+  }
   populateEvents();
   render(showPersonPhoto);
 }
 
 export async function refreshAllFromSupabase() {
   if (!state.sessao) return;
+  if (state.fotoTemporaria) return;
   try {
     await loadAllData();
   } catch (e) {
@@ -74,6 +81,32 @@ function screen(id, btn) {
   document.querySelectorAll(".nav").forEach((b) => b.classList.remove("active"));
   btn.classList.add("active");
   render(showPersonPhoto);
+}
+
+function sortPessoas(field) {
+  if (state.pessoasTable.sort === field) {
+    state.pessoasTable.dir = state.pessoasTable.dir === "asc" ? "desc" : "asc";
+  } else {
+    state.pessoasTable.sort = field;
+    state.pessoasTable.dir = "asc";
+  }
+  state.pessoasTable.page = 1;
+  render(showPersonPhoto);
+}
+
+function pessoasPrevPage() {
+  if (state.pessoasTable.page > 1) {
+    state.pessoasTable.page -= 1;
+    render(showPersonPhoto);
+  }
+}
+
+function pessoasNextPage() {
+  const totalPages = Math.max(1, Math.ceil(state.pessoas.length / state.pessoasTable.pageSize));
+  if (state.pessoasTable.page < totalPages) {
+    state.pessoasTable.page += 1;
+    render(showPersonPhoto);
+  }
 }
 
 async function addPerson() {
@@ -257,16 +290,20 @@ function previewCardPhoto(event) {
   reader.readAsDataURL(file);
 }
 
-function showPersonPhoto() {
+function showPersonPhoto(resetPreview = false) {
   const sel = document.getElementById("selectFotoPessoa");
   const box = document.getElementById("fotoPreview");
   const info = document.getElementById("fotoPessoaInfo");
   if (!sel || !box || !state.pessoas.length) return;
   const p = state.pessoas[Number(sel.value) || 0];
-  state.fotoTemporaria = null;
-  const input = document.getElementById("inputFotoCartao");
-  if (input) input.value = "";
-  if (p.fotoCartao) {
+  if (resetPreview) {
+    state.fotoTemporaria = null;
+    const input = document.getElementById("inputFotoCartao");
+    if (input) input.value = "";
+  }
+  if (state.fotoTemporaria) {
+    box.innerHTML = `<img src="${state.fotoTemporaria}" alt="Foto do cartão">`;
+  } else if (p.fotoCartao) {
     box.innerHTML = `<img src="${p.fotoCartao}" alt="Foto do cartão">`;
   } else {
     box.innerHTML = "<span>Sem foto associada</span>";
@@ -285,6 +322,7 @@ async function saveCardPhoto() {
   try {
     const updated = await updatePessoa(p.id, { fotoCartao: state.fotoTemporaria });
     Object.assign(p, updated);
+    state.fotoTemporaria = null;
     render(showPersonPhoto);
     alert("Foto associada a: " + p.nome);
   } catch (e) {
@@ -412,10 +450,45 @@ async function deleteAdmin(id) {
   }
 }
 
-function addAdmin() {
-  alert(
-    "Para criar novos acessos:\n1. Supabase → Authentication → Add user\n2. Supabase → administradores → Add row com o mesmo email"
-  );
+async function addAdmin() {
+  const nome = document.getElementById("adminNome").value.trim();
+  const email = document.getElementById("adminEmail").value.trim().toLowerCase();
+  const senha = document.getElementById("adminSenha").value;
+  const tipo = document.getElementById("adminTipo").value;
+
+  if (!nome || !email || !senha) {
+    alert("Preenche nome, email e senha.");
+    return;
+  }
+  if (state.administradores.some((a) => a.email.toLowerCase() === email)) {
+    alert("Já existe um acesso com este email.");
+    return;
+  }
+
+  try {
+    const novo = await insertAdministrador({ nome, email, tipo });
+    state.administradores.push(novo);
+    document.getElementById("adminNome").value = "";
+    document.getElementById("adminEmail").value = "";
+    document.getElementById("adminSenha").value = "";
+    render(showPersonPhoto);
+    alert(
+      "Administrador adicionado com sucesso.\n\n" +
+        "O email " +
+        email +
+        " já aparece na lista à direita.\n\n" +
+        "Para conseguir entrar na app, falta um passo no Supabase (só uma vez):\n" +
+        "1. Abre Supabase → Authentication → Users\n" +
+        "2. Clica Add user → Create new user\n" +
+        "3. Email: " +
+        email +
+        "\n4. Password: a mesma que escreveste no formulário\n" +
+        "5. Marca Auto Confirm User e guarda\n\n" +
+        "Depois disso o login já funciona."
+    );
+  } catch (e) {
+    alert("Erro ao adicionar acesso: " + e.message);
+  }
 }
 
 function exportDatabase() {
@@ -477,6 +550,9 @@ Object.assign(window, {
   login,
   logout,
   screen,
+  sortPessoas,
+  pessoasPrevPage,
+  pessoasNextPage,
   addPerson,
   deletePerson,
   toggleStatus,

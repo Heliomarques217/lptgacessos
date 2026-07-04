@@ -42,6 +42,13 @@ body{
   z-index:10;
 }
 .brand{display:flex;align-items:center;gap:16px}
+.brand img{
+  width:78px;
+  height:78px;
+  border-radius:50%;
+  object-fit:cover;
+  display:block;
+}
 .brand-mark{
   width:62px;height:62px;border-radius:20px;
   background:linear-gradient(145deg,var(--green),var(--red));
@@ -133,6 +140,8 @@ input:focus,select:focus{border-color:rgba(11,93,61,.5);box-shadow:0 0 0 4px rgb
 .steps div{background:rgba(255,255,255,.58);border:1px solid var(--line);border-radius:18px;padding:18px}
 .steps b{display:block;color:var(--red);font-size:13px;margin-bottom:8px}
 .steps span{font-weight:850}
+.doc-download{display:inline-block;margin-top:18px;padding:12px 16px;border-radius:14px;background:linear-gradient(135deg,var(--green),var(--green2));color:#fff;font-weight:950;text-decoration:none;box-shadow:0 12px 24px rgba(11,93,61,.18)}
+.doc-download:hover{filter:brightness(1.05)}
 .section-head{margin-bottom:22px;display:flex;justify-content:space-between;gap:20px;align-items:flex-end}
 .section-head h2{font-size:34px;letter-spacing:-.05em;margin-top:10px}
 .inline{align-items:center}
@@ -156,6 +165,17 @@ button,.import{border:0;background:#E7EFEB;color:var(--green);padding:12px 15px;
 .form-card,.preview-note{padding:26px}
 .preview-note h3{font-size:26px;margin-bottom:10px}.preview-note p{color:var(--muted);font-size:17px;line-height:1.45}
 .overflow{overflow:auto}
+.th-sort{cursor:pointer;user-select:none;white-space:nowrap}
+.th-sort:hover{color:var(--green)}
+.th-sort.active{color:var(--green)}
+.th-sort .sort-arrow{font-size:10px;margin-left:4px;opacity:.85}
+.table-pagination{
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  padding:14px 18px;border-top:1px solid var(--line);flex-wrap:wrap;
+}
+.table-pagination span{color:var(--muted);font-size:14px;font-weight:700}
+.pagination-actions{display:flex;gap:10px}
+.pagination-actions button:disabled{opacity:.45;cursor:not-allowed}
 table{width:100%;border-collapse:collapse}
 th,td{padding:15px;border-bottom:1px solid rgba(112,112,112,.15);text-align:left;font-size:14px}
 th{font-size:12px;text-transform:uppercase;color:var(--muted);letter-spacing:.05em}
@@ -342,7 +362,14 @@ th{font-size:12px;text-transform:uppercase;color:var(--muted);letter-spacing:.05
   border-radius:34px;
   padding:36px;
 }
-.login-logo{margin-bottom:20px}
+.login-logo{
+  display:block;
+  width:120px;
+  height:120px;
+  margin:0 auto 20px;
+  border-radius:50%;
+  object-fit:cover;
+}
 .login-card h2{
   font-size:38px;
   letter-spacing:-.06em;
