@@ -19,7 +19,11 @@ INSERT INTO public.funcoes (nome, ordem) VALUES
   ('Jockey/Driver', 7),
   ('Proprietário/a', 8),
   ('Treinador/a', 9),
-  ('Sócio/a', 10)
+  ('Sócio/a', 10),
+  ('Jockey/Driver / Proprietário/a', 11),
+  ('Jockey/Driver / Treinador/a', 12),
+  ('Proprietário/a / Treinador/a', 13),
+  ('Jockey/Driver / Proprietário/a / Treinador/a', 14)
 ON CONFLICT (nome) DO NOTHING;
 
 ALTER TABLE public.funcoes ENABLE ROW LEVEL SECURITY;

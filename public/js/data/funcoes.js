@@ -11,6 +11,10 @@ export const FUNCOES_PADRAO = [
   "Proprietário/a",
   "Treinador/a",
   "Sócio/a",
+  "Jockey/Driver / Proprietário/a",
+  "Jockey/Driver / Treinador/a",
+  "Proprietário/a / Treinador/a",
+  "Jockey/Driver / Proprietário/a / Treinador/a",
 ];
 
 export async function fetchFuncoes() {
