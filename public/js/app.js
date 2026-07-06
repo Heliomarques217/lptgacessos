@@ -75,11 +75,20 @@ async function logout() {
   checkSessionUi();
 }
 
+function toggleMobileMenu() {
+  document.body.classList.toggle("menu-open");
+}
+
+function closeMobileMenu() {
+  document.body.classList.remove("menu-open");
+}
+
 function screen(id, btn) {
   document.querySelectorAll(".page").forEach((p) => p.classList.remove("show"));
   document.getElementById(id).classList.add("show");
   document.querySelectorAll(".nav").forEach((b) => b.classList.remove("active"));
   btn.classList.add("active");
+  closeMobileMenu();
   render(showPersonPhoto);
 }
 
@@ -569,6 +578,8 @@ function importDatabase() {
 Object.assign(window, {
   login,
   logout,
+  toggleMobileMenu,
+  closeMobileMenu,
   screen,
   sortPessoas,
   pessoasPrevPage,
