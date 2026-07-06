@@ -2,7 +2,7 @@ import { isConfigured } from "./supabase.js";
 import { state } from "./state.js";
 import { fetchPessoas, insertPessoa, updatePessoa, deletePessoa as removePessoa } from "./data/pessoas.js";
 import { ensureCalendarioOficial } from "./data/jornadas.js";
-import { fetchEntradas, insertEntrada, findEntrada } from "./data/entradas.js";
+import { fetchEntradas, insertEntrada, findEntrada, deleteEntrada } from "./data/entradas.js";
 import {
   fetchAdministradores,
   insertAdministrador,
@@ -193,7 +193,7 @@ async function validateEntry() {
       return;
     }
 
-    await insertEntrada({
+    const entrada = await insertEntrada({
       evento,
       codigo: p.codigo,
       nome: p.nome,
@@ -202,15 +202,7 @@ async function validateEntry() {
       datahora: new Date().toISOString(),
     });
 
-    const r = {
-      datahora: new Date().toLocaleString("pt-PT"),
-      evento,
-      operador,
-      nome: p.nome,
-      funcao: p.funcao,
-      codigo: p.codigo,
-    };
-    state.entradas.unshift(r);
+    state.entradas.unshift(entrada);
     render(showPersonPhoto);
     out.className = "glass result ok";
     out.innerHTML = `<h3>Entrada autorizada</h3><p><b>${p.nome}</b><br>${p.funcao}<br>${p.numero}<br>Validado por ${operador}</p>`;
@@ -506,6 +498,19 @@ async function addAdmin() {
   }
 }
 
+async function deleteRegisto(id) {
+  const r = state.entradas.find((x) => x.id === id);
+  if (!r) return;
+  if (!confirm(`Eliminar a entrada de ${r.nome} às ${r.datahora}?`)) return;
+  try {
+    await deleteEntrada(id);
+    state.entradas = state.entradas.filter((x) => x.id !== id);
+    render(showPersonPhoto);
+  } catch (e) {
+    alert("Erro ao eliminar entrada: " + e.message);
+  }
+}
+
 function exportDatabase() {
   const wb = XLSX.utils.book_new();
   const pessoasSheet = state.pessoas.map((p) => ({
@@ -590,6 +595,7 @@ Object.assign(window, {
   deleteAdmin,
   exportDatabase,
   exportRecords,
+  deleteRegisto,
   importDatabase,
   refreshAllFromSupabase,
 });

@@ -13,7 +13,12 @@ export async function fetchEntradas() {
 export async function insertEntrada(payload) {
   const { data, error } = await supabase.from("entradas").insert(payload).select("*").single();
   if (error) throw error;
-  return data;
+  return mapEntrada(data);
+}
+
+export async function deleteEntrada(id) {
+  const { error } = await supabase.from("entradas").delete().eq("id", id);
+  if (error) throw error;
 }
 
 export async function findEntrada(evento, codigo) {

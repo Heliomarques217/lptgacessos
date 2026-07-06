@@ -149,9 +149,10 @@ export function render(showPersonPhotoFn) {
     tr.innerHTML =
       state.entradas
         .map(
-          (r) => `<tr><td data-label="Data/Hora">${r.datahora}</td><td data-label="Evento">${r.evento}</td><td data-label="Nome"><b>${r.nome}</b></td><td data-label="Função">${r.funcao}</td><td data-label="Validado por">${r.operador}</td></tr>`
+          (r) =>
+            `<tr><td data-label="Data/Hora">${r.datahora}</td><td data-label="Evento">${r.evento}</td><td data-label="Nome"><b>${r.nome}</b></td><td data-label="Função">${r.funcao}</td><td data-label="Validado por">${r.operador}</td><td data-label="Ações"><div class="actions-cell">${r.id ? `<button onclick="deleteRegisto('${r.id}')">Eliminar</button>` : ""}</div></td></tr>`
         )
-        .join("") || "<tr><td colspan='5'>Sem registos.</td></tr>";
+        .join("") || "<tr><td colspan='6'>Sem registos.</td></tr>";
   }
   const selFoto = document.getElementById("selectFotoPessoa");
   if (selFoto) {
