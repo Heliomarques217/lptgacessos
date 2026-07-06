@@ -158,8 +158,15 @@ async function toggleStatus(id) {
   }
 }
 
+function normalizeCodigoQR(raw) {
+  const text = String(raw || "").trim();
+  const match = text.match(/LPTG-2026-[A-Z0-9]+/i);
+  return match ? match[0].toUpperCase() : text;
+}
+
 async function validateEntry() {
-  const codigo = document.getElementById("codigoValidar").value.trim();
+  const codigo = normalizeCodigoQR(document.getElementById("codigoValidar").value);
+  document.getElementById("codigoValidar").value = codigo;
   const evento = document.getElementById("evento").value;
   const operador = document.getElementById("operador").value.trim() || "Não identificado";
   const out = document.getElementById("resultado");
@@ -222,16 +229,24 @@ async function openQRCamera() {
   if (!box) return;
   box.classList.add("show");
   if (state.qrScannerAtivo) return;
+  state.qrScanHandled = false;
   try {
     state.qrScanner = new Html5Qrcode("qrReader");
     state.qrScannerAtivo = true;
     await state.qrScanner.start(
       { facingMode: "environment" },
       { fps: 10, qrbox: { width: 250, height: 250 } },
-      (decodedText) => {
-        document.getElementById("codigoValidar").value = decodedText;
-        closeQRCamera();
-        validateEntry();
+      async (decodedText) => {
+        if (state.qrScanHandled) return;
+        state.qrScanHandled = true;
+        try {
+          const codigo = normalizeCodigoQR(decodedText);
+          document.getElementById("codigoValidar").value = codigo;
+          await closeQRCamera();
+          await validateEntry();
+        } finally {
+          state.qrScanHandled = false;
+        }
       },
       () => {}
     );

@@ -8,5 +8,6 @@ export const state = {
   qrPessoaAtual: null,
   qrScanner: null,
   qrScannerAtivo: false,
+  qrScanHandled: false,
   pessoasTable: { sort: "nome", dir: "asc", page: 1, pageSize: 20 },
 };
