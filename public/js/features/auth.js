@@ -1,5 +1,6 @@
 import { supabase } from "../supabase.js";
 import { state } from "../state.js";
+import { clearSensitiveState } from "./guards.js";
 import { fetchAdministradorByEmail } from "../data/administradores.js";
 
 function authErrorMessage(error) {
@@ -40,6 +41,36 @@ export async function login(email, password) {
 export async function logout() {
   await supabase.auth.signOut();
   state.sessao = null;
+  clearSensitiveState();
+}
+
+export function setupAuthListener(onSessionChange) {
+  supabase.auth.onAuthStateChange(async (event, session) => {
+    if (event === "SIGNED_OUT" || !session) {
+      state.sessao = null;
+      clearSensitiveState();
+      checkSessionUi();
+      if (onSessionChange) onSessionChange();
+      return;
+    }
+    if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+      const admin = await fetchAdministradorByEmail(session.user.email);
+      if (!admin) {
+        await supabase.auth.signOut();
+        state.sessao = null;
+        clearSensitiveState();
+      } else {
+        state.sessao = {
+          email: admin.email,
+          nome: admin.nome,
+          tipo: admin.tipo,
+          data: new Date().toISOString(),
+        };
+      }
+      checkSessionUi();
+      if (onSessionChange) onSessionChange();
+    }
+  });
 }
 
 export async function restoreSession() {
@@ -66,12 +97,20 @@ export async function restoreSession() {
 
 export function checkSessionUi() {
   const gate = document.getElementById("loginGate");
+  const shell = document.getElementById("appShell");
   if (!gate) return;
   if (state.sessao) {
     gate.classList.add("hide");
+    if (shell) shell.hidden = false;
     const op = document.getElementById("operador");
     if (op) op.value = state.sessao.nome;
   } else {
     gate.classList.remove("hide");
+    if (shell) shell.hidden = true;
   }
+  document.querySelectorAll("[data-admin-only]").forEach((el) => {
+    const tipo = (state.sessao?.tipo || "").toLowerCase();
+    const show = state.sessao && tipo.includes("administrador");
+    el.hidden = !show;
+  });
 }

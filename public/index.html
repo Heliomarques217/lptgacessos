@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <title>LPTG Access</title>
 <link rel="stylesheet" href="css/app.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -31,6 +31,8 @@
   </div>
 </div>
 
+<div id="appShell" class="app-shell" hidden>
+
 <div class="bg-orb orb-green"></div>
 <div class="bg-orb orb-red"></div>
 
@@ -53,7 +55,7 @@
     <button class="nav active" onclick="screen('dashboard', this)">Dashboard geral</button>
     <button class="nav" onclick="screen('validar', this)">Validação de Entradas</button>
     <button class="nav" onclick="screen('pessoas', this)">Base de dados</button>
-    <button class="nav" onclick="screen('admins', this)">Administradores</button>
+    <button class="nav" data-admin-only onclick="screen('admins', this)">Administradores</button>
     <button class="nav" onclick="screen('nova', this)">Adicionar pessoa</button>
     <button class="nav" onclick="screen('fotos', this)">Fotos de cartão</button>
     <button class="nav" onclick="screen('registos', this)">Registos</button>
@@ -142,7 +144,6 @@
               <th class="th-sort" data-sort="funcao" onclick="sortPessoas('funcao')">Função</th>
               <th class="th-sort" data-sort="numero" onclick="sortPessoas('numero')">Nº</th>
               <th class="th-sort" data-sort="codigo" onclick="sortPessoas('codigo')">Código QR</th>
-              <th>QR</th>
               <th class="th-sort" data-sort="ativo" onclick="sortPessoas('ativo')">Estado</th>
               <th>Ações</th>
             </tr>

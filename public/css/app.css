@@ -220,6 +220,43 @@ th{font-size:12px;text-transform:uppercase;color:var(--muted);letter-spacing:.05
 
 .actions-cell{display:flex;gap:10px;align-items:center;flex-wrap:nowrap}
 .actions-cell button{min-width:108px;white-space:nowrap}
+button.btn-sm{
+  min-width:0;
+  padding:7px 11px;
+  font-size:12px;
+  border-radius:10px;
+  line-height:1.2;
+  white-space:nowrap;
+  box-shadow:0 4px 12px rgba(0,0,0,.1);
+}
+button.btn-qr{
+  background:#E7EFEB;
+  color:var(--green);
+}
+button.btn-sm.btn-danger,
+button.btn-sm.btn-warn,
+button.btn-sm.btn-safe{
+  box-shadow:0 4px 12px rgba(0,0,0,.12);
+}
+.pessoas-table th:nth-child(3),
+.pessoas-table td[data-label="Nº"]{
+  white-space:nowrap;
+  width:1%;
+}
+.pessoas-table td[data-label="Código QR"]{
+  font-size:12px;
+  word-break:break-all;
+  max-width:160px;
+}
+.pessoas-table .actions-cell--compact{
+  gap:6px;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
+.pessoas-table .actions-cell--compact button{
+  min-width:0;
+  min-height:0;
+}
 .qr-preview-box{text-align:center;padding:28px}
 .qr-preview-box h3{font-size:26px;margin-bottom:10px}
 .qr-preview-box p{color:var(--muted);font-size:16px;line-height:1.45;margin-bottom:18px}
@@ -689,6 +726,25 @@ body.menu-open .menu-backdrop{
     width:100%;
     min-width:0;
     min-height:44px;
+  }
+
+  .pessoas-table td[data-label="Ações"] .actions-cell--compact{
+    flex-direction:row;
+    flex-wrap:wrap;
+    justify-content:flex-start;
+    gap:8px;
+  }
+
+  .pessoas-table td[data-label="Ações"] .actions-cell--compact button.btn-qr{
+    flex:1 1 100%;
+    min-height:36px;
+  }
+
+  .pessoas-table td[data-label="Ações"] .actions-cell--compact button:not(.btn-qr){
+    flex:1 1 calc(50% - 4px);
+    min-width:0;
+    min-height:38px;
+    padding:8px 10px;
   }
 }
 
