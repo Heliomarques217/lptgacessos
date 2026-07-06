@@ -170,6 +170,38 @@ button.btn-safe:hover{filter:brightness(1.05)}
 .result.no{border-left-color:var(--red);background:rgba(253,238,239,.86)}
 .result.neutral{border-left-color:var(--grey)}
 .form-grid,.card-builder{display:grid;grid-template-columns:min(430px,100%) minmax(0,1fr);gap:22px;align-items:start}
+.admins-layout{
+  display:flex;
+  flex-direction:column;
+  gap:22px;
+}
+.admins-layout .admins-form{
+  width:100%;
+  max-width:480px;
+}
+.admins-layout .admins-table{
+  width:100%;
+  overflow:visible;
+}
+.admins-table-grid{
+  width:100%;
+  table-layout:auto;
+}
+.admins-table-grid th,
+.admins-table-grid td{
+  vertical-align:middle;
+}
+.admins-table-grid td[data-label="Email"]{
+  word-break:break-word;
+}
+.admins-table-grid .actions-cell{
+  flex-wrap:nowrap;
+  justify-content:flex-end;
+  gap:8px;
+}
+.admins-table-grid .actions-cell button{
+  min-width:96px;
+}
 .form-card,.preview-note{padding:26px}
 .preview-note h3{font-size:26px;margin-bottom:10px}.preview-note p{color:var(--muted);font-size:17px;line-height:1.45}
 .overflow{overflow:auto;-webkit-overflow-scrolling:touch}

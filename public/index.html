@@ -227,11 +227,11 @@
 
     <section id="admins" class="page">
       <div class="section-head inline">
-        <div><span class="eyebrow">Acessos</span><h2>Administradores e staff</h2><p>Adiciona as pessoas que podem entrar no sistema. O registo fica na lista à direita; para o login funcionar, confirma também o utilizador em Supabase → Authentication → Users (mesmo email e senha).</p></div>
+        <div><span class="eyebrow">Acessos</span><h2>Administradores e staff</h2><p>Adiciona as pessoas que podem entrar no sistema. O registo fica na lista abaixo; para o login funcionar, confirma também o utilizador em Supabase → Authentication → Users (mesmo email e senha).</p></div>
       </div>
 
-      <div class="form-grid">
-        <div class="glass form-card">
+      <div class="admins-layout">
+        <div class="glass form-card admins-form">
           <label>Nome</label>
           <input id="adminNome" placeholder="Nome da pessoa">
 
@@ -250,8 +250,8 @@
           <button class="primary" onclick="addAdmin()">Adicionar acesso</button>
         </div>
 
-        <div class="glass overflow">
-          <table>
+        <div class="glass overflow admins-table">
+          <table class="admins-table-grid">
             <thead><tr><th>Nome</th><th>Email</th><th>Tipo</th><th>Estado</th><th>Ações</th></tr></thead>
             <tbody id="tabelaAdmins"></tbody>
           </table>
