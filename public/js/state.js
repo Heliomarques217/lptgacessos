@@ -3,6 +3,7 @@ export const state = {
   pessoas: [],
   entradas: [],
   administradores: [],
+  funcoes: [],
   sessao: null,
   fotoTemporaria: null,
   qrPessoaAtual: null,

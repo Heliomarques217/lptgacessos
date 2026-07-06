@@ -9,6 +9,7 @@ import {
   updateAdministrador,
   deleteAdministrador,
 } from "./data/administradores.js";
+import { ensureFuncoes } from "./data/funcoes.js";
 import { formatEventText } from "./data/mappers.js";
 import { login as authLogin, logout as authLogout, restoreSession, checkSessionUi, setupAuthListener } from "./features/auth.js";
 import { requireSession, requireAdmin, isAdmin } from "./features/guards.js";
@@ -37,6 +38,7 @@ async function loadAllData() {
     state.pessoas = await fetchPessoas();
     state.administradores = await fetchAdministradores();
     state.entradas = await fetchEntradas();
+    state.funcoes = await ensureFuncoes();
   } catch (e) {
     console.error(e);
     throw e;

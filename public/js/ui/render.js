@@ -142,8 +142,18 @@ export function renderPessoas() {
   if (next) next.disabled = page >= totalPages;
 }
 
+export function renderFuncoesSelect() {
+  const sel = document.getElementById("funcao");
+  if (!sel) return;
+  const old = sel.value;
+  const list = state.funcoes?.length ? state.funcoes : [];
+  sel.innerHTML = list.map((nome) => `<option>${nome}</option>`).join("");
+  if (old && list.includes(old)) sel.value = old;
+}
+
 export function render(showPersonPhotoFn) {
   renderPessoas();
+  renderFuncoesSelect();
   const tr = document.getElementById("tabelaRegistos");
   if (tr) {
     tr.innerHTML =
