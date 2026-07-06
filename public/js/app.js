@@ -10,7 +10,8 @@ import {
   deleteAdministrador,
 } from "./data/administradores.js";
 import { formatEventText } from "./data/mappers.js";
-import { login as authLogin, logout as authLogout, restoreSession, checkSessionUi } from "./features/auth.js";
+import { login as authLogin, logout as authLogout, restoreSession, checkSessionUi, setupAuthListener } from "./features/auth.js";
+import { requireSession, requireAdmin, isAdmin } from "./features/guards.js";
 import { populateEvents, render } from "./ui/render.js";
 
 function uid() {
@@ -26,6 +27,7 @@ function generateUniqueCode() {
 }
 
 async function loadAllData() {
+  requireSession();
   if (!isConfigured()) {
     alert("Configura SUPABASE_URL e SUPABASE_ANON_KEY em public/js/config.js");
     return;
@@ -84,6 +86,14 @@ function closeMobileMenu() {
 }
 
 function screen(id, btn) {
+  if (!state.sessao) {
+    alert("Inicia sessão para continuar.");
+    return;
+  }
+  if (id === "admins" && !isAdmin()) {
+    alert("Apenas administradores podem aceder a esta página.");
+    return;
+  }
   document.querySelectorAll(".page").forEach((p) => p.classList.remove("show"));
   document.getElementById(id).classList.add("show");
   document.querySelectorAll(".nav").forEach((b) => b.classList.remove("active"));
@@ -119,6 +129,12 @@ function pessoasNextPage() {
 }
 
 async function addPerson() {
+  try {
+    requireSession();
+  } catch (e) {
+    alert(e.message);
+    return;
+  }
   const nome = document.getElementById("nome").value.trim();
   const funcao = document.getElementById("funcao").value;
   const numero = document.getElementById("numero").value.trim();
@@ -145,6 +161,12 @@ async function addPerson() {
 }
 
 async function deletePerson(id) {
+  try {
+    requireSession();
+  } catch (e) {
+    alert(e.message);
+    return;
+  }
   if (!confirm("Apagar esta pessoa?")) return;
   try {
     await removePessoa(id);
@@ -156,6 +178,12 @@ async function deletePerson(id) {
 }
 
 async function toggleStatus(id) {
+  try {
+    requireSession();
+  } catch (e) {
+    alert(e.message);
+    return;
+  }
   const p = state.pessoas.find((x) => x.id === id);
   if (!p) return;
   try {
@@ -174,6 +202,12 @@ function normalizeCodigoQR(raw) {
 }
 
 async function validateEntry() {
+  try {
+    requireSession();
+  } catch (e) {
+    alert(e.message);
+    return;
+  }
   const codigo = normalizeCodigoQR(document.getElementById("codigoValidar").value);
   document.getElementById("codigoValidar").value = codigo;
   const evento = document.getElementById("evento").value;
@@ -434,6 +468,12 @@ async function downloadQRImage() {
 }
 
 async function toggleAdmin(id) {
+  try {
+    requireAdmin("gerir administradores");
+  } catch (e) {
+    alert(e.message);
+    return;
+  }
   const a = state.administradores.find((x) => x.id === id);
   if (!a) return;
   if (state.sessao && a.email === state.sessao.email && a.ativo) {
@@ -450,6 +490,12 @@ async function toggleAdmin(id) {
 }
 
 async function deleteAdmin(id) {
+  try {
+    requireAdmin("apagar administradores");
+  } catch (e) {
+    alert(e.message);
+    return;
+  }
   const a = state.administradores.find((x) => x.id === id);
   if (!a) return;
   if (state.sessao && a.email === state.sessao.email) {
@@ -467,6 +513,12 @@ async function deleteAdmin(id) {
 }
 
 async function addAdmin() {
+  try {
+    requireAdmin("adicionar administradores");
+  } catch (e) {
+    alert(e.message);
+    return;
+  }
   const nome = document.getElementById("adminNome").value.trim();
   const email = document.getElementById("adminEmail").value.trim().toLowerCase();
   const senha = document.getElementById("adminSenha").value;
@@ -508,6 +560,12 @@ async function addAdmin() {
 }
 
 async function deleteRegisto(id) {
+  try {
+    requireSession();
+  } catch (e) {
+    alert(e.message);
+    return;
+  }
   const r = state.entradas.find((x) => x.id === id);
   if (!r) return;
   if (!confirm(`Eliminar a entrada de ${r.nome} às ${r.datahora}?`)) return;
@@ -521,6 +579,12 @@ async function deleteRegisto(id) {
 }
 
 function exportDatabase() {
+  try {
+    requireSession();
+  } catch (e) {
+    alert(e.message);
+    return;
+  }
   const wb = XLSX.utils.book_new();
   const pessoasSheet = state.pessoas.map((p) => ({
     Nome: p.nome,
@@ -548,6 +612,12 @@ function exportDatabase() {
 }
 
 function exportRecords() {
+  try {
+    requireSession();
+  } catch (e) {
+    alert(e.message);
+    return;
+  }
   const wb = XLSX.utils.book_new();
   const linhas = state.entradas.map((r) => ({
     "Data/Hora": r.datahora,
@@ -623,6 +693,9 @@ async function init() {
     checkSessionUi();
     return;
   }
+  setupAuthListener(() => {
+    render(showPersonPhoto);
+  });
   await restoreSession();
   checkSessionUi();
   if (state.sessao) {

@@ -70,15 +70,15 @@ For each Auth user, add a row with the **same email**, plus `nome`, `tipo`, and 
 
 The app signs in with Supabase Auth, then checks this table. If there is no active row, login is rejected.
 
-### 3. Enable RLS (when ready)
+### 3. Enable RLS (critical for production)
 
-In Supabase (Table Editor or SQL Editor — your choice):
+Run the ready-made script in **Supabase → SQL Editor**:
 
-1. Enable RLS on `pessoas`, `jornadas`, `entradas`, `administradores`.
-2. Add policies for role **`authenticated`** so logged-in staff can read/write what they need.
-3. Ensure anonymous (not logged in) requests are blocked.
+`supabase/setup-rls.sql`
 
-The app already sends the Auth JWT on every API call after login, so RLS policies apply automatically.
+It enables RLS on `pessoas`, `jornadas`, `entradas`, and `administradores`, creates staff/admin helper functions, and blocks anonymous access. Only authenticated users listed in `administradores` (with `ativo = true`) can read or write data.
+
+The app sends the Auth JWT on every API call after login, so these policies apply automatically.
 
 Suggested order:
 
