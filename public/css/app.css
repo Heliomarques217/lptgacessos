@@ -248,10 +248,23 @@ button.btn-sm.btn-safe{
   word-break:break-all;
   max-width:160px;
 }
+.pessoas-table th.th-qr,
+.pessoas-table td.td-qr,
+.pessoas-table td[data-label="QR"]{
+  text-align:center;
+  vertical-align:middle;
+  width:88px;
+  padding-left:8px;
+  padding-right:8px;
+}
+.pessoas-table td[data-label="QR"] .btn-qr{
+  margin:0 auto;
+  display:inline-block;
+}
 .pessoas-table .actions-cell--compact{
   gap:6px;
-  flex-wrap:wrap;
-  justify-content:flex-end;
+  flex-wrap:nowrap;
+  justify-content:center;
 }
 .pessoas-table .actions-cell--compact button{
   min-width:0;
@@ -730,21 +743,25 @@ body.menu-open .menu-backdrop{
 
   .pessoas-table td[data-label="Ações"] .actions-cell--compact{
     flex-direction:row;
-    flex-wrap:wrap;
-    justify-content:flex-start;
+    flex-wrap:nowrap;
+    justify-content:stretch;
     gap:8px;
   }
 
-  .pessoas-table td[data-label="Ações"] .actions-cell--compact button.btn-qr{
-    flex:1 1 100%;
-    min-height:36px;
-  }
-
-  .pessoas-table td[data-label="Ações"] .actions-cell--compact button:not(.btn-qr){
-    flex:1 1 calc(50% - 4px);
+  .pessoas-table td[data-label="Ações"] .actions-cell--compact button{
+    flex:1 1 50%;
     min-width:0;
     min-height:38px;
     padding:8px 10px;
+  }
+
+  .pessoas-table td[data-label="QR"]{
+    text-align:center;
+  }
+
+  .pessoas-table td[data-label="QR"] .btn-qr{
+    width:100%;
+    min-height:38px;
   }
 }
 
