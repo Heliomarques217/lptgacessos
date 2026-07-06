@@ -47,7 +47,7 @@ export function renderAdmins() {
         (a) => `<tr>
     <td data-label="Nome"><b>${a.nome}</b></td>
     <td data-label="Email">${a.email}</td>
-    <td data-label="Tipo">${a.tipo}</td>
+    <td data-label="Tipo">${a.tipo || "Administrador"}</td>
     <td data-label="Estado"><span class="badge ${a.ativo ? "" : "off"}">${a.ativo ? "Ativo" : "Inativo"}</span></td>
     <td data-label="Ações"><div class="actions-cell"><button class="${a.ativo ? "btn-warn" : "btn-safe"}" onclick="toggleAdmin('${a.id}')">${a.ativo ? "Desativar" : "Ativar"}</button><button class="btn-danger" onclick="deleteAdmin('${a.id}')">Apagar</button></div></td>
   </tr>`
