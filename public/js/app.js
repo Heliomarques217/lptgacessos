@@ -55,56 +55,18 @@ export async function refreshAllFromSupabase() {
   }
 }
 
-function showLoginError(message) {
-  const erro = document.getElementById("loginError");
-  const gate = document.getElementById("loginGate");
-  if (gate) gate.classList.remove("hide");
-  const shell = document.getElementById("appShell");
-  if (shell) shell.hidden = true;
-  if (erro) erro.textContent = message;
-}
-
 async function login() {
   const email = document.getElementById("loginEmail").value.trim().toLowerCase();
   const senha = document.getElementById("loginPassword").value;
-  const btn = document.querySelector("#loginForm button[type='submit']");
   const erro = document.getElementById("loginError");
-
-  if (!email || !senha) {
-    showLoginError("Preenche email e senha.");
-    return;
-  }
-
-  if (erro) erro.textContent = "";
-  if (btn) {
-    btn.disabled = true;
-    btn.textContent = "A entrar...";
-  }
-
+  erro.textContent = "";
   try {
     await authLogin(email, senha);
     checkSessionUi();
+    await loadAllData();
     render(showPersonPhoto);
-    try {
-      await loadAllData();
-      render(showPersonPhoto);
-    } catch (loadError) {
-      console.error(loadError);
-      alert(
-        "Entraste com sucesso, mas houve erro ao carregar dados: " +
-          (loadError.message || "verifica ligação ao Supabase.")
-      );
-    }
   } catch (e) {
-    state.sessao = null;
-    await authLogout().catch(() => {});
-    const msg = e.message || "Email ou senha incorretos, ou utilizador inativo.";
-    showLoginError(msg);
-  } finally {
-    if (btn) {
-      btn.disabled = false;
-      btn.textContent = "Entrar";
-    }
+    erro.textContent = e.message || "Não foi possível entrar.";
   }
 }
 
@@ -734,13 +696,12 @@ async function init() {
   }
 
   if (!isConfigured()) {
-    showLoginError("Configura public/js/config.js com as credenciais Supabase.");
+    document.getElementById("loginError").textContent =
+      "Configura public/js/config.js com as credenciais Supabase.";
     checkSessionUi();
     return;
   }
-  setupAuthListener(() => {
-    render(showPersonPhoto);
-  });
+  setupAuthListener();
   await restoreSession();
   checkSessionUi();
   if (state.sessao) {
