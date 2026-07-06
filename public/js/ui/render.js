@@ -157,10 +157,11 @@ export function render(showPersonPhotoFn) {
   const selFoto = document.getElementById("selectFotoPessoa");
   if (selFoto) {
     const oldFoto = selFoto.value;
-    selFoto.innerHTML = state.pessoas
-      .map((p, i) => `<option value="${i}">${p.nome} - ${p.funcao}</option>`)
-      .join("");
-    selFoto.value = oldFoto || 0;
+    selFoto.innerHTML =
+      `<option value="">— Escolhe uma pessoa —</option>` +
+      state.pessoas.map((p, i) => `<option value="${i}">${p.nome} - ${p.funcao}</option>`).join("");
+    selFoto.value =
+      oldFoto !== "" && state.pessoas[Number(oldFoto)] !== undefined ? oldFoto : "";
     if (showPersonPhotoFn) showPersonPhotoFn();
   }
   const hoje = new Date().toLocaleDateString("pt-PT");

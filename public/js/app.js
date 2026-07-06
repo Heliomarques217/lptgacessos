@@ -85,6 +85,18 @@ function closeMobileMenu() {
   document.body.classList.remove("menu-open");
 }
 
+function resetFotoTab() {
+  state.fotoTemporaria = null;
+  const sel = document.getElementById("selectFotoPessoa");
+  const input = document.getElementById("inputFotoCartao");
+  const box = document.getElementById("fotoPreview");
+  const info = document.getElementById("fotoPessoaInfo");
+  if (sel) sel.value = "";
+  if (input) input.value = "";
+  if (box) box.innerHTML = "<span>Sem foto associada</span>";
+  if (info) info.textContent = "—";
+}
+
 function screen(id, btn) {
   if (!state.sessao) {
     alert("Inicia sessão para continuar.");
@@ -99,6 +111,7 @@ function screen(id, btn) {
   document.querySelectorAll(".nav").forEach((b) => b.classList.remove("active"));
   btn.classList.add("active");
   closeMobileMenu();
+  if (id === "fotos") resetFotoTab();
   render(showPersonPhoto);
 }
 
@@ -344,13 +357,27 @@ function showPersonPhoto(resetPreview = false) {
   const sel = document.getElementById("selectFotoPessoa");
   const box = document.getElementById("fotoPreview");
   const info = document.getElementById("fotoPessoaInfo");
-  if (!sel || !box || !state.pessoas.length) return;
-  const p = state.pessoas[Number(sel.value) || 0];
+  if (!sel || !box) return;
+
   if (resetPreview) {
     state.fotoTemporaria = null;
     const input = document.getElementById("inputFotoCartao");
     if (input) input.value = "";
   }
+
+  if (!sel.value) {
+    if (!state.fotoTemporaria) {
+      box.innerHTML = "<span>Sem foto associada</span>";
+    } else {
+      box.innerHTML = `<img src="${state.fotoTemporaria}" alt="Foto do cartão">`;
+    }
+    if (info) info.textContent = "—";
+    return;
+  }
+
+  const p = state.pessoas[Number(sel.value)];
+  if (!p) return;
+
   if (state.fotoTemporaria) {
     box.innerHTML = `<img src="${state.fotoTemporaria}" alt="Foto do cartão">`;
   } else if (p.fotoCartao) {
@@ -363,12 +390,15 @@ function showPersonPhoto(resetPreview = false) {
 
 async function saveCardPhoto() {
   const sel = document.getElementById("selectFotoPessoa");
-  if (!sel || !state.pessoas.length) return;
+  if (!sel || !sel.value) {
+    alert("Escolhe uma pessoa primeiro.");
+    return;
+  }
   if (!state.fotoTemporaria) {
     alert("Tens de escolher uma foto primeiro.");
     return;
   }
-  const p = state.pessoas[Number(sel.value) || 0];
+  const p = state.pessoas[Number(sel.value)];
   try {
     const updated = await updatePessoa(p.id, { fotoCartao: state.fotoTemporaria });
     Object.assign(p, updated);
@@ -382,8 +412,11 @@ async function saveCardPhoto() {
 
 async function removeCardPhoto() {
   const sel = document.getElementById("selectFotoPessoa");
-  if (!sel || !state.pessoas.length) return;
-  const p = state.pessoas[Number(sel.value) || 0];
+  if (!sel || !sel.value) {
+    alert("Escolhe uma pessoa primeiro.");
+    return;
+  }
+  const p = state.pessoas[Number(sel.value)];
   if (!p.fotoCartao) {
     alert("Esta pessoa ainda não tem foto associada.");
     return;
