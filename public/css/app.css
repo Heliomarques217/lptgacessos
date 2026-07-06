@@ -265,6 +265,10 @@ button.btn-qr{
   background:#E7EFEB;
   color:var(--green);
 }
+button.btn-renew{
+  background:#E8F0FA;
+  color:#1A4A7A;
+}
 button.btn-sm.btn-danger,
 button.btn-sm.btn-warn,
 button.btn-sm.btn-safe{

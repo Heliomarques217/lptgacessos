@@ -201,12 +201,96 @@ async function toggleStatus(id) {
   }
   const p = state.pessoas.find((x) => x.id === id);
   if (!p) return;
+  const msg = p.ativo
+    ? `Concluir o cartão de ${p.nome}? O QR deixa de validar entradas.`
+    : `Reativar o cartão de ${p.nome}?`;
+  if (!confirm(msg)) return;
   try {
     const updated = await updatePessoa(id, { ativo: !p.ativo });
     Object.assign(p, updated);
     render(showPersonPhoto);
   } catch (e) {
     alert("Erro ao atualizar: " + e.message);
+  }
+}
+
+let renewFromId = null;
+
+function openRenewCardModal(id) {
+  const p = state.pessoas.find((x) => x.id === id);
+  if (!p) return;
+  renewFromId = id;
+  const modal = document.getElementById("renewCardModal");
+  const nomeEl = document.getElementById("renewCardNome");
+  const infoEl = document.getElementById("renewCardInfo");
+  const sel = document.getElementById("renewFuncao");
+  if (!modal || !nomeEl || !infoEl || !sel) return;
+
+  nomeEl.textContent = p.nome;
+  if (p.ativo) {
+    infoEl.textContent = `Função actual: ${p.funcao}. O cartão actual será concluído e será criado um novo código QR.`;
+  } else {
+    infoEl.textContent = `Cartão concluído (${p.funcao}). Será criado um novo registo com código QR novo.`;
+  }
+
+  const list = state.funcoes?.length ? state.funcoes : [];
+  sel.innerHTML = list.map((nome) => `<option value="${nome}">${nome}</option>`).join("");
+  const other = list.find((f) => f !== p.funcao);
+  sel.value = other || list[0] || p.funcao;
+
+  modal.classList.add("show");
+}
+
+function closeRenewCardModal() {
+  renewFromId = null;
+  const modal = document.getElementById("renewCardModal");
+  if (modal) modal.classList.remove("show");
+}
+
+async function confirmRenewCard() {
+  try {
+    requireSession();
+  } catch (e) {
+    alert(e.message);
+    return;
+  }
+  const old = state.pessoas.find((x) => x.id === renewFromId);
+  if (!old) return;
+
+  const sel = document.getElementById("renewFuncao");
+  const novaFuncao = sel?.value?.trim();
+  if (!novaFuncao) {
+    alert("Escolhe a nova função.");
+    return;
+  }
+  if (old.ativo && novaFuncao === old.funcao) {
+    if (!confirm("A função é igual à actual. Mesmo assim queres gerar um novo código QR?")) return;
+  }
+
+  try {
+    if (old.ativo) {
+      const concluded = await updatePessoa(old.id, { ativo: false });
+      Object.assign(old, concluded);
+    }
+
+    const novaPessoa = await insertPessoa({
+      nome: old.nome,
+      funcao: novaFuncao,
+      numero: old.numero,
+      codigo: generateUniqueCode(),
+      ativo: true,
+      fotoCartao: old.fotoCartao || undefined,
+    });
+    state.pessoas.push(novaPessoa);
+    closeRenewCardModal();
+    render(showPersonPhoto);
+    viewQRCode(novaPessoa.id);
+    alert(
+      `Novo cartão criado para ${novaPessoa.nome}.\n\nFunção: ${novaPessoa.funcao}\nCódigo QR: ${novaPessoa.codigo}` +
+        (old.ativo ? `\n\nO cartão anterior (${old.codigo}) foi concluído.` : "")
+    );
+  } catch (e) {
+    alert("Erro ao criar novo cartão: " + e.message);
   }
 }
 
@@ -237,7 +321,7 @@ async function validateEntry() {
   }
   if (!p.ativo) {
     out.className = "glass result no";
-    out.innerHTML = `<h3>Cartão inativo</h3><p>${p.nome} está inativo. Não permitir entrada.</p>`;
+    out.innerHTML = `<h3>Cartão concluído</h3><p>${p.nome} — este QR já não está activo. Usa o cartão novo.</p>`;
     return;
   }
 
@@ -626,7 +710,7 @@ function exportDatabase() {
     "Função/Categoria": p.funcao,
     "Nº/Referência": p.numero,
     "Código QR": p.codigo,
-    Estado: p.ativo ? "Ativo" : "Inativo",
+    Estado: p.ativo ? "Ativo" : "Concluído",
   }));
   const adminsSheet = state.administradores.map((a) => ({
     Nome: a.nome,
@@ -692,6 +776,9 @@ Object.assign(window, {
   addPerson,
   deletePerson,
   toggleStatus,
+  openRenewCardModal,
+  closeRenewCardModal,
+  confirmRenewCard,
   validateEntry,
   openQRCamera,
   closeQRCamera,

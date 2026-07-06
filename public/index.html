@@ -261,6 +261,18 @@
 </main>
 
 
+<div class="qr-modal" id="renewCardModal">
+  <div class="qr-modal-card">
+    <button type="button" class="qr-modal-close" onclick="closeRenewCardModal()">×</button>
+    <span class="eyebrow">Novo cartão</span>
+    <h3 id="renewCardNome">—</h3>
+    <p id="renewCardInfo">—</p>
+    <label for="renewFuncao">Nova função / categoria</label>
+    <select id="renewFuncao"></select>
+    <button type="button" class="primary" style="margin-top:16px;width:100%" onclick="confirmRenewCard()">Concluir e gerar novo QR</button>
+  </div>
+</div>
+
 <div class="qr-modal" id="qrModal">
   <div class="qr-modal-card">
     <button class="qr-modal-close" onclick="closeQRCode()">×</button>
