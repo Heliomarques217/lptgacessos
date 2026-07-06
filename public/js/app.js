@@ -84,8 +84,17 @@ async function login() {
   try {
     await authLogin(email, senha);
     checkSessionUi();
-    await loadAllData();
     render(showPersonPhoto);
+    try {
+      await loadAllData();
+      render(showPersonPhoto);
+    } catch (loadError) {
+      console.error(loadError);
+      alert(
+        "Entraste com sucesso, mas houve erro ao carregar dados: " +
+          (loadError.message || "verifica ligação ao Supabase.")
+      );
+    }
   } catch (e) {
     state.sessao = null;
     await authLogout().catch(() => {});

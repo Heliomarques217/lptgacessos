@@ -9,6 +9,15 @@ function setLoginInProgress(value) {
   loginInProgress = value;
 }
 
+function withTimeout(promise, ms, message) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => {
+      setTimeout(() => reject(new Error(message)), ms);
+    }),
+  ]);
+}
+
 function authErrorMessage(error) {
   const code = error?.code || "";
   const msg = error?.message || "";
@@ -30,9 +39,17 @@ function authErrorMessage(error) {
 export async function login(email, password) {
   setLoginInProgress(true);
   try {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await withTimeout(
+      supabase.auth.signInWithPassword({ email, password }),
+      20000,
+      "O servidor demorou demasiado a responder. Verifica a ligação à internet e tenta outra vez."
+    );
     if (error) throw new Error(authErrorMessage(error));
-    const admin = await fetchAdministradorByEmail(email.trim().toLowerCase());
+    const admin = await withTimeout(
+      fetchAdministradorByEmail(email.trim().toLowerCase()),
+      15000,
+      "Não foi possível verificar o acesso na tabela administradores. Confirma o SQL do Passo 1."
+    );
     if (!admin) {
       await supabase.auth.signOut();
       throw new Error(
@@ -57,33 +74,39 @@ export async function logout() {
   clearSensitiveState();
 }
 
-export function setupAuthListener(onSessionChange) {
-  supabase.auth.onAuthStateChange(async (event, session) => {
-    if (event === "SIGNED_OUT" || !session) {
+async function onAuthStateChangeHandler(event, session, onSessionChange) {
+  if (event === "SIGNED_OUT" || !session) {
+    state.sessao = null;
+    clearSensitiveState();
+    checkSessionUi();
+    if (onSessionChange) onSessionChange();
+    return;
+  }
+  if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+    if (loginInProgress) return;
+    const admin = await fetchAdministradorByEmail(session.user.email);
+    if (!admin) {
+      await supabase.auth.signOut();
       state.sessao = null;
       clearSensitiveState();
-      checkSessionUi();
-      if (onSessionChange) onSessionChange();
-      return;
+    } else {
+      state.sessao = {
+        email: admin.email,
+        nome: admin.nome,
+        tipo: admin.tipo,
+        data: new Date().toISOString(),
+      };
     }
-    if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
-      if (loginInProgress) return;
-      const admin = await fetchAdministradorByEmail(session.user.email);
-      if (!admin) {
-        await supabase.auth.signOut();
-        state.sessao = null;
-        clearSensitiveState();
-      } else {
-        state.sessao = {
-          email: admin.email,
-          nome: admin.nome,
-          tipo: admin.tipo,
-          data: new Date().toISOString(),
-        };
-      }
-      checkSessionUi();
-      if (onSessionChange) onSessionChange();
-    }
+    checkSessionUi();
+    if (onSessionChange) onSessionChange();
+  }
+}
+
+export function setupAuthListener(onSessionChange) {
+  supabase.auth.onAuthStateChange((event, session) => {
+    setTimeout(() => {
+      void onAuthStateChangeHandler(event, session, onSessionChange);
+    }, 0);
   });
 }
 
