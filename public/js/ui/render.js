@@ -49,7 +49,7 @@ export function renderAdmins() {
     <td data-label="Email">${a.email}</td>
     <td data-label="Tipo">${a.tipo}</td>
     <td data-label="Estado"><span class="badge ${a.ativo ? "" : "off"}">${a.ativo ? "Ativo" : "Inativo"}</span></td>
-    <td data-label="Ações"><div class="actions-cell"><button onclick="toggleAdmin('${a.id}')">${a.ativo ? "Desativar" : "Ativar"}</button><button onclick="deleteAdmin('${a.id}')">Apagar</button></div></td>
+    <td data-label="Ações"><div class="actions-cell"><button class="${a.ativo ? "btn-warn" : "btn-safe"}" onclick="toggleAdmin('${a.id}')">${a.ativo ? "Desativar" : "Ativar"}</button><button class="btn-danger" onclick="deleteAdmin('${a.id}')">Apagar</button></div></td>
   </tr>`
       )
       .join("") || "<tr><td colspan='5'>Sem acessos criados.</td></tr>";
@@ -111,7 +111,7 @@ export function renderPessoas() {
     slice
       .map(
         (p) =>
-          `<tr><td data-label="Nome"><b>${p.nome}</b></td><td data-label="Função">${p.funcao}</td><td data-label="Nº">${p.numero}</td><td data-label="Código QR">${p.codigo}</td><td data-label="QR"><button onclick="viewQRCode('${p.id}')">Ver</button></td><td data-label="Estado"><span class="badge ${p.ativo ? "" : "off"}">${p.ativo ? "Ativo" : "Inativo"}</span></td><td data-label="Ações"><div class="actions-cell"><button onclick="toggleStatus('${p.id}')">${p.ativo ? "Desativar" : "Ativar"}</button><button onclick="deletePerson('${p.id}')">Apagar</button></div></td></tr>`
+          `<tr><td data-label="Nome"><b>${p.nome}</b></td><td data-label="Função">${p.funcao}</td><td data-label="Nº">${p.numero}</td><td data-label="Código QR">${p.codigo}</td><td data-label="QR"><button onclick="viewQRCode('${p.id}')">Ver</button></td><td data-label="Estado"><span class="badge ${p.ativo ? "" : "off"}">${p.ativo ? "Ativo" : "Inativo"}</span></td><td data-label="Ações"><div class="actions-cell"><button class="${p.ativo ? "btn-warn" : "btn-safe"}" onclick="toggleStatus('${p.id}')">${p.ativo ? "Desativar" : "Ativar"}</button><button class="btn-danger" onclick="deletePerson('${p.id}')">Apagar</button></div></td></tr>`
       )
       .join("") || `<tr><td colspan="7">Sem pessoas.</td></tr>`;
 
@@ -150,7 +150,7 @@ export function render(showPersonPhotoFn) {
       state.entradas
         .map(
           (r) =>
-            `<tr><td data-label="Data/Hora">${r.datahora}</td><td data-label="Evento">${r.evento}</td><td data-label="Nome"><b>${r.nome}</b></td><td data-label="Função">${r.funcao}</td><td data-label="Validado por">${r.operador}</td><td data-label="Ações"><div class="actions-cell">${r.id ? `<button onclick="deleteRegisto('${r.id}')">Eliminar</button>` : ""}</div></td></tr>`
+            `<tr><td data-label="Data/Hora">${r.datahora}</td><td data-label="Evento">${r.evento}</td><td data-label="Nome"><b>${r.nome}</b></td><td data-label="Função">${r.funcao}</td><td data-label="Validado por">${r.operador}</td><td data-label="Ações"><div class="actions-cell">${r.id ? `<button class="btn-danger" onclick="deleteRegisto('${r.id}')">Eliminar</button>` : ""}</div></td></tr>`
         )
         .join("") || "<tr><td colspan='6'>Sem registos.</td></tr>";
   }

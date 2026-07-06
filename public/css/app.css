@@ -3,6 +3,8 @@
   --green2:#0E7A50;
   --red:#C51F2F;
   --red2:#E23B46;
+  --orange:#F39C12;
+  --orange2:#D35400;
   --grey:#707070;
   --dark:#0E1713;
   --bg:#EEF2EF;
@@ -155,6 +157,12 @@ input:focus,select:focus{border-color:rgba(11,93,61,.5);box-shadow:0 0 0 4px rgb
 @keyframes scan{0%{top:42px}50%{top:174px}100%{top:42px}}
 .primary{width:100%;border:0;background:linear-gradient(135deg,var(--green),var(--green2));color:white;padding:14px 17px;border-radius:15px;font-weight:950;cursor:pointer;margin-top:16px;box-shadow:0 16px 30px rgba(11,93,61,.22)}
 button,.import{border:0;background:#E7EFEB;color:var(--green);padding:12px 15px;border-radius:14px;font-weight:950;cursor:pointer;display:inline-block}
+button.btn-danger{background:linear-gradient(135deg,var(--red),var(--red2));color:#fff;box-shadow:0 8px 20px rgba(197,31,47,.28)}
+button.btn-danger:hover{filter:brightness(1.06)}
+button.btn-warn{background:linear-gradient(135deg,var(--orange),var(--orange2));color:#fff;box-shadow:0 8px 20px rgba(211,84,0,.24)}
+button.btn-warn:hover{filter:brightness(1.06)}
+button.btn-safe{background:linear-gradient(135deg,var(--green),var(--green2));color:#fff;box-shadow:0 8px 20px rgba(11,93,61,.2)}
+button.btn-safe:hover{filter:brightness(1.05)}
 .import input{display:none}.actions{display:flex;gap:10px;flex-wrap:wrap}
 .result{padding:30px;border-left:8px solid var(--grey)}
 .result h3{font-size:26px;margin-bottom:8px}
