@@ -55,18 +55,47 @@ export async function refreshAllFromSupabase() {
   }
 }
 
+function showLoginError(message) {
+  const erro = document.getElementById("loginError");
+  const gate = document.getElementById("loginGate");
+  if (gate) gate.classList.remove("hide");
+  const shell = document.getElementById("appShell");
+  if (shell) shell.hidden = true;
+  if (erro) erro.textContent = message;
+}
+
 async function login() {
   const email = document.getElementById("loginEmail").value.trim().toLowerCase();
   const senha = document.getElementById("loginPassword").value;
+  const btn = document.querySelector("#loginForm button[type='submit']");
   const erro = document.getElementById("loginError");
-  erro.textContent = "";
+
+  if (!email || !senha) {
+    showLoginError("Preenche email e senha.");
+    return;
+  }
+
+  if (erro) erro.textContent = "";
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = "A entrar...";
+  }
+
   try {
     await authLogin(email, senha);
     checkSessionUi();
     await loadAllData();
     render(showPersonPhoto);
   } catch (e) {
-    erro.textContent = e.message || "Email ou senha incorretos, ou utilizador inativo.";
+    state.sessao = null;
+    await authLogout().catch(() => {});
+    const msg = e.message || "Email ou senha incorretos, ou utilizador inativo.";
+    showLoginError(msg);
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = "Entrar";
+    }
   }
 }
 
@@ -687,9 +716,16 @@ document.addEventListener("visibilitychange", () => {
 window.addEventListener("focus", refreshAllFromSupabase);
 
 async function init() {
+  const loginForm = document.getElementById("loginForm");
+  if (loginForm) {
+    loginForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      login();
+    });
+  }
+
   if (!isConfigured()) {
-    document.getElementById("loginError").textContent =
-      "Configura public/js/config.js com as credenciais Supabase.";
+    showLoginError("Configura public/js/config.js com as credenciais Supabase.");
     checkSessionUi();
     return;
   }

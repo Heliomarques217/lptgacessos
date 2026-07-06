@@ -13,7 +13,7 @@ AS $$
   SELECT EXISTS (
     SELECT 1
     FROM public.administradores a
-    WHERE lower(a.email) = lower(coalesce(auth.jwt() ->> 'email', ''))
+    WHERE lower(a.email) = lower(coalesce(auth.email(), ''))
       AND a.ativo = true
   );
 $$;
@@ -28,7 +28,7 @@ AS $$
   SELECT EXISTS (
     SELECT 1
     FROM public.administradores a
-    WHERE lower(a.email) = lower(coalesce(auth.jwt() ->> 'email', ''))
+    WHERE lower(a.email) = lower(coalesce(auth.email(), ''))
       AND a.ativo = true
       AND lower(coalesce(a.tipo, '')) LIKE '%administrador%'
   );
@@ -60,6 +60,7 @@ DROP POLICY IF EXISTS "staff_select_entradas" ON public.entradas;
 DROP POLICY IF EXISTS "staff_insert_entradas" ON public.entradas;
 DROP POLICY IF EXISTS "staff_delete_entradas" ON public.entradas;
 
+DROP POLICY IF EXISTS "staff_read_own_admin_row" ON public.administradores;
 DROP POLICY IF EXISTS "staff_select_administradores" ON public.administradores;
 DROP POLICY IF EXISTS "admin_insert_administradores" ON public.administradores;
 DROP POLICY IF EXISTS "admin_update_administradores" ON public.administradores;
@@ -94,6 +95,9 @@ CREATE POLICY "staff_delete_entradas" ON public.entradas
   FOR DELETE TO authenticated USING (public.is_lptg_staff());
 
 -- Administradores: leitura para staff; alterações só administradores
+CREATE POLICY "staff_read_own_admin_row" ON public.administradores
+  FOR SELECT TO authenticated
+  USING (lower(email) = lower(auth.email()));
 CREATE POLICY "staff_select_administradores" ON public.administradores
   FOR SELECT TO authenticated USING (public.is_lptg_staff());
 CREATE POLICY "admin_insert_administradores" ON public.administradores

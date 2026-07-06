@@ -20,13 +20,15 @@
     <h2>LPTG Access</h2>
     <p>Introduz o email e a senha para aceder ao sistema.</p>
 
+    <form id="loginForm" autocomplete="on">
     <label>Email</label>
-    <input id="loginEmail" type="email" placeholder="email@exemplo.com">
+    <input id="loginEmail" type="email" placeholder="email@exemplo.com" autocomplete="username">
 
     <label>Senha</label>
-    <input id="loginPassword" type="password" placeholder="Senha">
+    <input id="loginPassword" type="password" placeholder="Senha" autocomplete="current-password">
 
-    <button class="primary" onclick="login()">Entrar</button>
+    <button type="submit" class="primary">Entrar</button>
+    </form>
     <small id="loginError"></small>
   </div>
 </div>

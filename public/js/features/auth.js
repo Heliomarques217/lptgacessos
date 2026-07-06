@@ -3,6 +3,12 @@ import { state } from "../state.js";
 import { clearSensitiveState } from "./guards.js";
 import { fetchAdministradorByEmail } from "../data/administradores.js";
 
+let loginInProgress = false;
+
+function setLoginInProgress(value) {
+  loginInProgress = value;
+}
+
 function authErrorMessage(error) {
   const code = error?.code || "";
   const msg = error?.message || "";
@@ -22,20 +28,27 @@ function authErrorMessage(error) {
 }
 
 export async function login(email, password) {
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) throw new Error(authErrorMessage(error));
-  const admin = await fetchAdministradorByEmail(email.trim().toLowerCase());
-  if (!admin) {
-    await supabase.auth.signOut();
-    throw new Error("Este utilizador não tem acesso ativo na tabela administradores.");
+  setLoginInProgress(true);
+  try {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw new Error(authErrorMessage(error));
+    const admin = await fetchAdministradorByEmail(email.trim().toLowerCase());
+    if (!admin) {
+      await supabase.auth.signOut();
+      throw new Error(
+        "Este utilizador não tem acesso ativo na tabela administradores (email igual e ativo = true)."
+      );
+    }
+    state.sessao = {
+      email: admin.email,
+      nome: admin.nome,
+      tipo: admin.tipo,
+      data: new Date().toISOString(),
+    };
+    return state.sessao;
+  } finally {
+    setLoginInProgress(false);
   }
-  state.sessao = {
-    email: admin.email,
-    nome: admin.nome,
-    tipo: admin.tipo,
-    data: new Date().toISOString(),
-  };
-  return state.sessao;
 }
 
 export async function logout() {
@@ -54,6 +67,7 @@ export function setupAuthListener(onSessionChange) {
       return;
     }
     if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+      if (loginInProgress) return;
       const admin = await fetchAdministradorByEmail(session.user.email);
       if (!admin) {
         await supabase.auth.signOut();
