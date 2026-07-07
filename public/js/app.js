@@ -17,8 +17,7 @@ import {
   populateEvents,
   render,
   getValidarEvento,
-  onValidarHipodromoChange,
-  onValidarJornadaChange,
+  onValidarEventoChange,
 } from "./ui/render.js";
 
 function uid() {
@@ -316,16 +315,10 @@ async function validateEntry() {
   const codigo = normalizeCodigoQR(document.getElementById("codigoValidar").value);
   document.getElementById("codigoValidar").value = codigo;
   const out = document.getElementById("resultado");
-  const hipodromo = document.getElementById("validarHipodromo")?.value;
-  if (!hipodromo) {
-    out.className = "glass result no";
-    out.innerHTML = "<h3>Escolhe o hipódromo</h3><p>Selecciona o hipódromo onde estás a validar entradas.</p>";
-    return;
-  }
   const evento = getValidarEvento();
   if (!evento) {
     out.className = "glass result no";
-    out.innerHTML = "<h3>Escolhe a jornada</h3><p>Selecciona a jornada deste hipódromo.</p>";
+    out.innerHTML = "<h3>Escolhe a jornada</h3><p>Selecciona a jornada / hipódromo onde estás a validar entradas.</p>";
     return;
   }
   const operador = document.getElementById("operador").value.trim() || "Não identificado";
@@ -376,8 +369,8 @@ async function validateEntry() {
 }
 
 async function openQRCamera() {
-  if (!document.getElementById("validarHipodromo")?.value) {
-    alert("Selecciona primeiro o hipódromo onde vais validar entradas.");
+  if (!document.getElementById("validarEvento")?.value) {
+    alert("Selecciona primeiro a jornada onde vais validar entradas.");
     return;
   }
   const box = document.getElementById("qrReaderBox");
@@ -801,8 +794,7 @@ Object.assign(window, {
   closeRenewCardModal,
   confirmRenewCard,
   validateEntry,
-  onValidarHipodromoChange,
-  onValidarJornadaChange,
+  onValidarEventoChange,
   openQRCamera,
   closeQRCamera,
   showNewQRCode,

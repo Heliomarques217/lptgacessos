@@ -159,16 +159,12 @@ input:focus,select:focus{border-color:rgba(11,93,61,.5);box-shadow:0 0 0 4px rgb
 .validar-context{
   margin-bottom:22px;
   padding:24px 36px;
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:0 22px;
-  align-items:end;
 }
 .validar-context label{margin-top:0;margin-bottom:12px;padding-left:2px}
-.validar-context select{margin-bottom:18px}
-.validar-context .event-hint{grid-column:1/-1;margin:0}
+.validar-context select{margin-bottom:12px}
+.validar-context .event-hint{margin:0;display:block}
 @media(max-width:700px){
-  .validar-context{grid-template-columns:1fr;padding:28px 24px}
+  .validar-context{padding:28px 24px}
 }
 .scanner{padding:24px}
 .scan-frame{height:220px;border-radius:28px;background:linear-gradient(135deg,rgba(11,93,61,.08),rgba(197,31,47,.08));border:1px solid var(--line);position:relative;display:flex;align-items:center;justify-content:center;margin-bottom:22px;overflow:hidden}

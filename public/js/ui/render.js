@@ -10,140 +10,78 @@ export function getNextEvent() {
   );
 }
 
-const VALIDAR_HIP_KEY = "lptg_validar_hipodromo";
-const VALIDAR_JORNADA_KEY = "lptg_validar_jornada";
+const VALIDAR_EVENTO_KEY = "lptg_validar_evento";
 
-export function getUniqueHipodromos() {
-  const seen = new Set();
-  const list = [];
-  for (const j of state.jornadas) {
-    if (!seen.has(j.hipodromo)) {
-      seen.add(j.hipodromo);
-      list.push(j.hipodromo);
-    }
-  }
-  return list.sort((a, b) => a.localeCompare(b, "pt"));
+function findJornadaByEventoText(evento) {
+  return state.jornadas.find((j) => formatEventText(j) === evento);
 }
 
-export function getJornadasForHipodromo(hipodromo) {
-  return state.jornadas.filter((j) => j.hipodromo === hipodromo);
-}
-
-export function pickDefaultJornadaForHipodromo(hipodromo) {
-  const list = getJornadasForHipodromo(hipodromo);
-  if (!list.length) return null;
-  const hoje = new Date();
-  hoje.setHours(0, 0, 0, 0);
-  const today = list.find((j) => new Date(j.data + "T00:00:00").getTime() === hoje.getTime());
-  if (today) return today;
-  const upcoming = list.find((j) => new Date(j.data + "T00:00:00") >= hoje);
-  return upcoming || list[list.length - 1];
-}
-
-function findJornada(hipodromo, jornadaName) {
-  return state.jornadas.find((j) => j.hipodromo === hipodromo && j.jornada === jornadaName);
-}
-
-function syncValidarToSidebar(j) {
-  if (!j) return;
+function syncValidarToSidebar(evento) {
   const sidebar = document.getElementById("evento");
-  if (sidebar) sidebar.value = formatEventText(j);
+  if (sidebar && evento) sidebar.value = evento;
 }
 
 function updateValidarHint(j) {
   const hint = document.getElementById("validarEventoHint");
   if (!hint) return;
   hint.textContent = j
-    ? `A validar entradas para ${j.jornada} (${j.dataPT})`
-    : "Escolhe o hipódromo onde estás a validar entradas";
-}
-
-function fillValidarJornadaSelect(hipodromo, preferredJornadaName) {
-  const sel = document.getElementById("validarJornada");
-  if (!sel) return null;
-  const list = getJornadasForHipodromo(hipodromo);
-  sel.innerHTML = list
-    .map((j) => `<option value="${j.jornada}">${j.jornada} — ${j.dataPT}</option>`)
-    .join("");
-  const pick =
-    list.find((j) => j.jornada === preferredJornadaName) || pickDefaultJornadaForHipodromo(hipodromo);
-  if (pick) sel.value = pick.jornada;
-  return pick;
+    ? `A validar entradas em ${j.hipodromo}`
+    : "Escolhe a jornada onde estás a validar entradas";
 }
 
 export function getValidarEvento() {
-  const hipodromo = document.getElementById("validarHipodromo")?.value;
-  const jornadaName = document.getElementById("validarJornada")?.value;
-  if (hipodromo && jornadaName) {
-    const j = findJornada(hipodromo, jornadaName);
-    if (j) return formatEventText(j);
-  }
+  const val = document.getElementById("validarEvento")?.value;
+  if (val) return val;
   return document.getElementById("evento")?.value || "";
 }
 
 export function populateValidarEventos() {
-  const hipSel = document.getElementById("validarHipodromo");
-  const jornadaSel = document.getElementById("validarJornada");
-  if (!hipSel || !jornadaSel || !state.jornadas.length) return;
+  const sel = document.getElementById("validarEvento");
+  if (!sel || !state.jornadas.length) return;
 
-  const hipodromos = getUniqueHipodromos();
-  const savedHip = sessionStorage.getItem(VALIDAR_HIP_KEY);
-  const savedJornada = sessionStorage.getItem(VALIDAR_JORNADA_KEY);
-
-  hipSel.innerHTML =
-    `<option value="">— Selecionar hipódromo —</option>` +
-    hipodromos.map((h) => `<option value="${h}">${h}</option>`).join("");
-
-  const defaultHip =
-    (savedHip && hipodromos.includes(savedHip) && savedHip) ||
-    getNextEvent()?.hipodromo ||
-    pickDefaultJornadaForHipodromo(hipodromos[0])?.hipodromo ||
-    "";
-
-  if (defaultHip) {
-    hipSel.value = defaultHip;
-    const j = fillValidarJornadaSelect(defaultHip, savedJornada);
-    if (j) {
-      sessionStorage.setItem(VALIDAR_HIP_KEY, defaultHip);
-      sessionStorage.setItem(VALIDAR_JORNADA_KEY, j.jornada);
-      syncValidarToSidebar(j);
+  let saved = sessionStorage.getItem(VALIDAR_EVENTO_KEY);
+  if (!saved) {
+    const hip = sessionStorage.getItem("lptg_validar_hipodromo");
+    const jornada = sessionStorage.getItem("lptg_validar_jornada");
+    if (hip && jornada) {
+      const j = state.jornadas.find((x) => x.hipodromo === hip && x.jornada === jornada);
+      if (j) saved = formatEventText(j);
     }
-    updateValidarHint(j);
+  }
+
+  sel.innerHTML =
+    `<option value="">— Selecionar jornada —</option>` +
+    state.jornadas
+      .map((j) => {
+        const evento = formatEventText(j);
+        return `<option value="${evento}">${evento}</option>`;
+      })
+      .join("");
+
+  const prox = getNextEvent();
+  const defaultVal =
+    (saved && findJornadaByEventoText(saved) && saved) || (prox && formatEventText(prox)) || "";
+
+  if (defaultVal) {
+    sel.value = defaultVal;
+    sessionStorage.setItem(VALIDAR_EVENTO_KEY, defaultVal);
+    syncValidarToSidebar(defaultVal);
+    updateValidarHint(findJornadaByEventoText(defaultVal));
   } else {
-    jornadaSel.innerHTML = "";
     updateValidarHint(null);
   }
 }
 
-export function onValidarHipodromoChange() {
-  const hip = document.getElementById("validarHipodromo")?.value || "";
-  if (hip) sessionStorage.setItem(VALIDAR_HIP_KEY, hip);
-  else sessionStorage.removeItem(VALIDAR_HIP_KEY);
-
-  if (!hip) {
-    const jornadaSel = document.getElementById("validarJornada");
-    if (jornadaSel) jornadaSel.innerHTML = "";
-    sessionStorage.removeItem(VALIDAR_JORNADA_KEY);
+export function onValidarEventoChange() {
+  const evento = document.getElementById("validarEvento")?.value || "";
+  if (evento) {
+    sessionStorage.setItem(VALIDAR_EVENTO_KEY, evento);
+    syncValidarToSidebar(evento);
+    updateValidarHint(findJornadaByEventoText(evento));
+  } else {
+    sessionStorage.removeItem(VALIDAR_EVENTO_KEY);
     updateValidarHint(null);
-    return;
   }
-
-  const j = fillValidarJornadaSelect(hip, sessionStorage.getItem(VALIDAR_JORNADA_KEY));
-  if (j) {
-    sessionStorage.setItem(VALIDAR_JORNADA_KEY, j.jornada);
-    syncValidarToSidebar(j);
-  }
-  updateValidarHint(j);
-}
-
-export function onValidarJornadaChange() {
-  const hip = document.getElementById("validarHipodromo")?.value;
-  const jornadaName = document.getElementById("validarJornada")?.value;
-  if (!hip || !jornadaName) return;
-  sessionStorage.setItem(VALIDAR_JORNADA_KEY, jornadaName);
-  const j = findJornada(hip, jornadaName);
-  syncValidarToSidebar(j);
-  updateValidarHint(j);
 }
 
 export function populateEvents() {

@@ -112,13 +112,11 @@
     </section>
 
     <section id="validar" class="page">
-      <div class="section-head"><div><span class="eyebrow">Entrada</span><h2>Validar cartão</h2><p>Escolhe o hipódromo uma vez e depois lê os QR. O sistema verifica se o cartão existe, se está activo e se já entrou nesta jornada.</p></div></div>
+      <div class="section-head"><div><span class="eyebrow">Entrada</span><h2>Validar cartão</h2><p>Escolhe a jornada uma vez e depois lê os QR. O sistema verifica se o cartão existe, se está activo e se já entrou neste evento.</p></div></div>
       <div class="glass validar-context">
-        <label for="validarHipodromo">Hipódromo</label>
-        <label for="validarJornada">Jornada</label>
-        <select id="validarHipodromo" onchange="onValidarHipodromoChange()"></select>
-        <select id="validarJornada" onchange="onValidarJornadaChange()"></select>
-        <small id="validarEventoHint" class="event-hint">Escolhe o hipódromo onde estás a validar entradas</small>
+        <label for="validarEvento">Jornada / Hipódromo</label>
+        <select id="validarEvento" onchange="onValidarEventoChange()"></select>
+        <small id="validarEventoHint" class="event-hint">Escolhe a jornada onde estás a validar entradas</small>
       </div>
       <div class="validate-layout">
         <div class="glass scanner">
