@@ -13,7 +13,13 @@ import { ensureFuncoes } from "./data/funcoes.js";
 import { formatEventText } from "./data/mappers.js";
 import { login as authLogin, logout as authLogout, restoreSession, checkSessionUi, setupAuthListener } from "./features/auth.js";
 import { requireSession, requireAdmin, isAdmin } from "./features/guards.js";
-import { populateEvents, render } from "./ui/render.js";
+import {
+  populateEvents,
+  render,
+  getValidarEvento,
+  onValidarHipodromoChange,
+  onValidarJornadaChange,
+} from "./ui/render.js";
 
 function uid() {
   return crypto.randomUUID();
@@ -309,9 +315,20 @@ async function validateEntry() {
   }
   const codigo = normalizeCodigoQR(document.getElementById("codigoValidar").value);
   document.getElementById("codigoValidar").value = codigo;
-  const evento = document.getElementById("evento").value;
-  const operador = document.getElementById("operador").value.trim() || "Não identificado";
   const out = document.getElementById("resultado");
+  const hipodromo = document.getElementById("validarHipodromo")?.value;
+  if (!hipodromo) {
+    out.className = "glass result no";
+    out.innerHTML = "<h3>Escolhe o hipódromo</h3><p>Selecciona o hipódromo onde estás a validar entradas.</p>";
+    return;
+  }
+  const evento = getValidarEvento();
+  if (!evento) {
+    out.className = "glass result no";
+    out.innerHTML = "<h3>Escolhe a jornada</h3><p>Selecciona a jornada deste hipódromo.</p>";
+    return;
+  }
+  const operador = document.getElementById("operador").value.trim() || "Não identificado";
   const p = state.pessoas.find((x) => x.codigo.toLowerCase() === codigo.toLowerCase());
 
   if (!p) {
@@ -359,6 +376,10 @@ async function validateEntry() {
 }
 
 async function openQRCamera() {
+  if (!document.getElementById("validarHipodromo")?.value) {
+    alert("Selecciona primeiro o hipódromo onde vais validar entradas.");
+    return;
+  }
   const box = document.getElementById("qrReaderBox");
   if (!box) return;
   box.classList.add("show");
@@ -780,6 +801,8 @@ Object.assign(window, {
   closeRenewCardModal,
   confirmRenewCard,
   validateEntry,
+  onValidarHipodromoChange,
+  onValidarJornadaChange,
   openQRCamera,
   closeQRCamera,
   showNewQRCode,
