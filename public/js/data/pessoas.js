@@ -27,6 +27,7 @@ export async function insertPessoa(pessoa) {
 export async function updatePessoa(id, patch) {
   const row = {};
   if (patch.ativo !== undefined) row.ativo = patch.ativo;
+  if (patch.funcao !== undefined) row.funcao = patch.funcao;
   if (patch.fotoCartao !== undefined) row.foto_cartao = patch.fotoCartao || null;
   const { data, error } = await supabase.from("pessoas").update(row).eq("id", id).select("*").single();
   if (error) throw error;

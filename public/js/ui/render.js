@@ -166,6 +166,14 @@ function getSortedPessoas() {
   return list;
 }
 
+function funcoesOptionsHtml(current) {
+  const list = state.funcoes?.length ? state.funcoes : [];
+  const names = current && !list.includes(current) ? [current, ...list] : list;
+  return names
+    .map((nome) => `<option${nome === current ? " selected" : ""}>${nome}</option>`)
+    .join("");
+}
+
 export function renderPessoas() {
   const tp = document.getElementById("tabelaPessoas");
   if (!tp) return;
@@ -186,7 +194,7 @@ export function renderPessoas() {
     slice
       .map(
         (p) =>
-          `<tr><td data-label="Nome" title="${p.nome}"><b>${p.nome}</b></td><td data-label="Função" title="${p.funcao}">${p.funcao}</td><td data-label="Nº">${p.numero}</td><td data-label="Código QR" title="${p.codigo}">${p.codigo}</td><td data-label="Estado"><span class="badge ${p.ativo ? "" : "off"}">${p.ativo ? "Ativo" : "Concluído"}</span></td><td data-label="QR" class="td-qr"><button type="button" class="btn-sm btn-qr" onclick="viewQRCode('${p.id}')">Ver QR</button></td><td data-label="Ações"><div class="actions-cell actions-cell--compact"><button type="button" class="btn-sm btn-renew" onclick="openRenewCardModal('${p.id}')">Novo cartão</button><button type="button" class="btn-sm ${p.ativo ? "btn-warn" : "btn-safe"}" onclick="toggleStatus('${p.id}')">${p.ativo ? "Concluir" : "Reativar"}</button><button type="button" class="btn-sm btn-danger" onclick="deletePerson('${p.id}')">Apagar</button></div></td></tr>`
+          `<tr><td data-label="Nome" title="${p.nome}"><b>${p.nome}</b></td><td data-label="Função"><select class="funcao-select" title="${p.funcao}" onchange="updatePersonFuncao('${p.id}', this)">${funcoesOptionsHtml(p.funcao)}</select></td><td data-label="Nº">${p.numero}</td><td data-label="Código QR" title="${p.codigo}">${p.codigo}</td><td data-label="Estado"><span class="badge ${p.ativo ? "" : "off"}">${p.ativo ? "Ativo" : "Concluído"}</span></td><td data-label="QR" class="td-qr"><button type="button" class="btn-sm btn-qr" onclick="viewQRCode('${p.id}')">Ver QR</button></td><td data-label="Ações"><div class="actions-cell actions-cell--compact"><button type="button" class="btn-sm btn-renew" onclick="openRenewCardModal('${p.id}')">Novo cartão</button><button type="button" class="btn-sm ${p.ativo ? "btn-warn" : "btn-safe"}" onclick="toggleStatus('${p.id}')">${p.ativo ? "Concluir" : "Reativar"}</button><button type="button" class="btn-sm btn-danger" onclick="deletePerson('${p.id}')">Apagar</button></div></td></tr>`
       )
       .join("") || `<tr><td colspan="7">Sem pessoas.</td></tr>`;
 

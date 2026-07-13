@@ -246,6 +246,7 @@ button.btn-safe:hover{filter:brightness(1.05)}
 .pagination-actions button:disabled{opacity:.45;cursor:not-allowed}
 table{width:100%;border-collapse:collapse}
 th,td{padding:15px;border-bottom:1px solid rgba(112,112,112,.15);text-align:left;font-size:14px}
+.funcao-select{width:100%;min-width:120px;max-width:220px;padding:8px 10px;font-size:13px;border-radius:10px}
 th{font-size:12px;text-transform:uppercase;color:var(--muted);letter-spacing:.05em}
 .badge{display:inline-flex;padding:7px 10px;border-radius:999px;background:#E6F5ED;color:var(--green);font-weight:950;font-size:12px}
 .badge.off{background:#FDECEE;color:var(--red)}

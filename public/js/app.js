@@ -219,6 +219,31 @@ async function toggleStatus(id) {
   }
 }
 
+async function updatePersonFuncao(id, selectEl) {
+  try {
+    requireSession();
+  } catch (e) {
+    alert(e.message);
+    return;
+  }
+  const p = state.pessoas.find((x) => x.id === id);
+  if (!p || !selectEl) return;
+  const novaFuncao = selectEl.value.trim();
+  if (!novaFuncao || novaFuncao === p.funcao) return;
+  const anterior = p.funcao;
+  selectEl.disabled = true;
+  try {
+    const updated = await updatePessoa(id, { funcao: novaFuncao });
+    Object.assign(p, updated);
+    render(showPersonPhoto);
+  } catch (e) {
+    selectEl.value = anterior;
+    alert("Erro ao alterar função: " + e.message);
+  } finally {
+    selectEl.disabled = false;
+  }
+}
+
 let renewFromId = null;
 
 function openRenewCardModal(id) {
@@ -790,6 +815,7 @@ Object.assign(window, {
   addPerson,
   deletePerson,
   toggleStatus,
+  updatePersonFuncao,
   openRenewCardModal,
   closeRenewCardModal,
   confirmRenewCard,
