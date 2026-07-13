@@ -1,5 +1,6 @@
 import { state } from "../state.js";
 import { formatEventText } from "../data/mappers.js";
+import { FUNCOES_PADRAO } from "../data/funcoes.js";
 
 export function getNextEvent() {
   const hoje = new Date();
@@ -167,7 +168,7 @@ function getSortedPessoas() {
 }
 
 function funcoesOptionsHtml(current) {
-  const list = state.funcoes?.length ? state.funcoes : [];
+  const list = state.funcoes?.length ? state.funcoes : FUNCOES_PADRAO;
   const names = current && !list.includes(current) ? [current, ...list] : list;
   return names
     .map((nome) => `<option${nome === current ? " selected" : ""}>${nome}</option>`)
