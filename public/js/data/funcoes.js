@@ -9,6 +9,7 @@ export const FUNCOES_PADRAO = [
   "Staff",
   "Veterinário/a",
   "Jockey/Driver",
+  "Jockey Aprendiz",
   "Proprietário/a",
   "Treinador/a",
   "Sócio/a",
