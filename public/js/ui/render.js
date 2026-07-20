@@ -250,12 +250,6 @@ export function renderAuditoria() {
   if (full) {
     full.innerHTML = list.length ? list.map(auditRowHtml).join("") : empty;
   }
-  const recent = document.getElementById("tabelaAtividadeRecente");
-  if (recent) {
-    recent.innerHTML = list.length
-      ? list.slice(0, 8).map(auditRowHtml).join("")
-      : "<tr><td colspan='4'>Sem eventos recentes.</td></tr>";
-  }
 }
 
 export function render(showPersonPhotoFn) {

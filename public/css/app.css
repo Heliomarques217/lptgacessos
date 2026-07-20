@@ -97,11 +97,6 @@ h1{font-size:24px;letter-spacing:-.04em}
   transition:.18s;
 }
 .nav:hover,.nav.active{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.16);transform:translateX(3px)}
-.dashboard-audit{margin-top:24px}
-.compact-head{margin-bottom:12px}
-.compact-head h3{font-size:22px;margin:8px 0 6px}
-.compact-head p{margin:0;color:var(--muted);font-size:14px;line-height:1.45}
-.compact-head .section-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}
 .audit-table td,.audit-table th{font-size:13px}
 .audit-table td:nth-child(4){max-width:420px;word-break:break-word}
 .control-card{margin-top:24px;padding:18px;border-radius:20px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.12)}

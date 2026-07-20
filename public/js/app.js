@@ -185,11 +185,6 @@ function pessoasNextPage() {
   }
 }
 
-function openAtividadeScreen() {
-  const btn = document.querySelector('.nav[onclick*="atividade"]');
-  screen("atividade", btn || document.querySelector(".nav"));
-}
-
 async function addPerson() {
   try {
     requireSession();
@@ -875,7 +870,6 @@ Object.assign(window, {
   toggleMobileMenu,
   closeMobileMenu,
   screen,
-  openAtividadeScreen,
   sortPessoas,
   pessoasPrevPage,
   pessoasNextPage,
