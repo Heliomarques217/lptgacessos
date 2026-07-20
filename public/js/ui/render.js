@@ -242,8 +242,10 @@ function auditRowHtml(r) {
 
 export function renderAuditoria() {
   const list = state.auditoria || [];
-  const empty =
-    "<tr><td colspan='4'>Sem eventos registados ainda.</td></tr>";
+  const err = state.auditoriaError;
+  const empty = err
+    ? `<tr><td colspan="4">${err}</td></tr>`
+    : "<tr><td colspan='4'>Sem eventos registados ainda.</td></tr>";
   const full = document.getElementById("tabelaAtividade");
   if (full) {
     full.innerHTML = list.length ? list.map(auditRowHtml).join("") : empty;
@@ -267,7 +269,7 @@ export function render(showPersonPhotoFn) {
           (r) =>
             `<tr><td data-label="Data/Hora">${r.datahora}</td><td data-label="Evento">${r.evento}</td><td data-label="Nome"><b>${r.nome}</b></td><td data-label="Função">${r.funcao}</td><td data-label="Validado por">${r.operador}</td><td data-label="Ações"><div class="actions-cell">${r.id ? `<button class="btn-danger" onclick="deleteRegisto('${r.id}')">Eliminar</button>` : ""}</div></td></tr>`
         )
-        .join("") || "<tr><td colspan='6'>Sem registos.</td></tr>";
+        .join("") || "<tr><td colspan='6'>Sem entradas registadas.</td></tr>";
   }
   const selFoto = document.getElementById("selectFotoPessoa");
   if (selFoto) {

@@ -5,6 +5,7 @@ export function clearSensitiveState() {
   state.entradas = [];
   state.administradores = [];
   state.auditoria = [];
+  state.auditoriaError = null;
   state.fotoTemporaria = null;
   state.qrPessoaAtual = null;
 }

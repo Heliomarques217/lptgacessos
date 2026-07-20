@@ -33,6 +33,43 @@ function formatAuditoriaDatahora(iso) {
   });
 }
 
+const SESSAO_AUDIT_KEY = "lptg_audit_sessao_logged";
+
+export function clearSessaoAuditFlag() {
+  sessionStorage.removeItem(SESSAO_AUDIT_KEY);
+}
+
+export function pushLocalAuditoria(acao, detalhe) {
+  if (!isAdmin()) return;
+  state.auditoria.unshift({
+    id: "",
+    datahora: formatAuditoriaDatahora(new Date().toISOString()),
+    operador: state.sessao.nome,
+    email: state.sessao.email,
+    acao,
+    detalhe: detalhe || "—",
+  });
+  if (state.auditoria.length > 500) state.auditoria.length = 500;
+}
+
+/** Regista entrada uma vez por sessão no browser (login ou reabrir com sessão guardada). */
+export async function recordSessaoEntradaIfNeeded() {
+  if (!state.sessao) return;
+  if (sessionStorage.getItem(SESSAO_AUDIT_KEY)) return;
+  const detalhe = `Entrada na app (${state.sessao.email})`;
+  await insertAuditoria("sessao_entrada", detalhe);
+  sessionStorage.setItem(SESSAO_AUDIT_KEY, "1");
+  pushLocalAuditoria("sessao_entrada", detalhe);
+}
+
+export async function recordSessaoEntradaLogin() {
+  if (!state.sessao) return;
+  const detalhe = `Login (${state.sessao.email})`;
+  await insertAuditoria("sessao_entrada", detalhe);
+  sessionStorage.setItem(SESSAO_AUDIT_KEY, "1");
+  pushLocalAuditoria("sessao_entrada", detalhe);
+}
+
 export async function insertAuditoria(acao, detalhe) {
   if (!state.sessao) return;
   const row = {
@@ -48,16 +85,7 @@ export async function insertAuditoria(acao, detalhe) {
 export function logAtividade(acao, detalhe) {
   insertAuditoria(acao, detalhe)
     .then(() => {
-      if (!isAdmin()) return;
-      state.auditoria.unshift({
-        id: "",
-        datahora: formatAuditoriaDatahora(new Date().toISOString()),
-        operador: state.sessao.nome,
-        email: state.sessao.email,
-        acao,
-        detalhe: detalhe || "—",
-      });
-      if (state.auditoria.length > 500) state.auditoria.length = 500;
+      pushLocalAuditoria(acao, detalhe);
     })
     .catch((e) => console.warn("Auditoria:", e.message || e));
 }

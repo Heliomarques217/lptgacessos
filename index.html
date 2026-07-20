@@ -54,7 +54,7 @@
     <button class="nav" onclick="screen('admins', this)">Administradores</button>
     <button class="nav" onclick="screen('nova', this)">Adicionar pessoa</button>
     <button class="nav" onclick="screen('fotos', this)">Fotos de cartão</button>
-    <button class="nav nav-with-count" onclick="screen('registos', this)"><span>Entradas validadas</span><span class="nav-count" id="navEntradasCount">0</span></button>
+    <button class="nav" onclick="screen('registos', this)">Entradas corridas</button>
     <button class="nav" onclick="screen('calendario', this)">Calendário</button>
 
     <div class="control-card">
@@ -258,7 +258,7 @@
     </section>
 
     <section id="registos" class="page">
-      <div class="section-head inline"><div><span class="eyebrow">Histórico</span><h2>Registos de entrada</h2><p>Lista com hora, evento, pessoa validada e responsável pela validação.</p></div><button onclick="exportRecords()">Exportar Excel</button></div>
+      <div class="section-head inline"><div><span class="eyebrow">Histórico</span><h2>Entradas corridas</h2><p>Lista com hora, evento, pessoa validada e responsável pela validação.</p></div><button onclick="exportRecords()">Exportar Excel</button></div>
       <div class="glass overflow"><table><thead><tr><th>Data/Hora</th><th>Evento</th><th>Nome</th><th>Função</th><th>Validado por</th></tr></thead><tbody id="tabelaRegistos"></tbody></table></div>
     </section>
 

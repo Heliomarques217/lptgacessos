@@ -60,7 +60,7 @@
     <button class="nav" data-admin-only onclick="screen('admins', this)">Administradores</button>
     <button class="nav" onclick="screen('nova', this)">Adicionar pessoa</button>
     <button class="nav" onclick="screen('fotos', this)">Fotos de cartão</button>
-    <button class="nav" onclick="screen('registos', this)">Registos</button>
+    <button class="nav" onclick="screen('registos', this)">Entradas corridas</button>
     <button class="nav" data-admin-only onclick="screen('atividade', this)">Registo de atividade</button>
     <button class="nav" onclick="screen('calendario', this)">Calendário</button>
 
@@ -272,12 +272,12 @@
     </section>
 
     <section id="registos" class="page">
-      <div class="section-head inline"><div><span class="eyebrow">Histórico</span><h2>Registos de entrada</h2><p>Lista com hora, evento, pessoa validada e responsável pela validação.</p></div><button onclick="exportRecords()">Exportar Excel</button></div>
+      <div class="section-head inline"><div><span class="eyebrow">Histórico</span><h2>Entradas corridas</h2><p>Lista com hora, evento, pessoa validada e responsável pela validação.</p></div><button onclick="exportRecords()">Exportar Excel</button></div>
       <div class="glass overflow"><table><thead><tr><th>Data/Hora</th><th>Evento</th><th>Nome</th><th>Função</th><th>Validado por</th><th>Ações</th></tr></thead><tbody id="tabelaRegistos"></tbody></table></div>
     </section>
 
     <section id="atividade" class="page">
-      <div class="section-head"><div><span class="eyebrow">Auditoria</span><h2>Registo de atividade</h2><p>Histórico de entradas e saídas na app e de alterações feitas por administradores e staff (últimos 500 eventos).</p></div></div>
+      <div class="section-head"><div><span class="eyebrow">Auditoria</span><h2>Registo de atividade</h2><p>Entradas e saídas na app e alterações feitas por administradores e staff. <strong>Não confundir com «Entradas corridas»</strong> (validações na porta).</p></div></div>
       <div class="glass overflow"><table class="audit-table"><thead><tr><th>Data/Hora</th><th>Utilizador</th><th>Ação</th><th>Detalhe</th></tr></thead><tbody id="tabelaAtividade"></tbody></table></div>
     </section>
 

@@ -12,4 +12,5 @@ export const state = {
   qrScanHandled: false,
   pessoasTable: { sort: "nome", dir: "asc", page: 1, pageSize: 20 },
   auditoria: [],
+  auditoriaError: null,
 };

@@ -10,7 +10,7 @@ import {
   deleteAdministrador,
 } from "./data/administradores.js";
 import { ensureFuncoes } from "./data/funcoes.js";
-import { fetchAuditoria, logAtividade, insertAuditoria } from "./data/auditoria.js";
+import { fetchAuditoria, logAtividade, insertAuditoria, recordSessaoEntradaIfNeeded, recordSessaoEntradaLogin, clearSessaoAuditFlag } from "./data/auditoria.js";
 import { formatEventText } from "./data/mappers.js";
 import { login as authLogin, logout as authLogout, restoreSession, checkSessionUi, setupAuthListener } from "./features/auth.js";
 import { requireSession, requireAdmin, isAdmin } from "./features/guards.js";
@@ -48,12 +48,15 @@ async function loadAllData() {
     if (isAdmin()) {
       try {
         state.auditoria = await fetchAuditoria();
+        state.auditoriaError = null;
       } catch (e) {
         console.warn("Auditoria:", e);
         state.auditoria = [];
+        state.auditoriaError = e.message || String(e);
       }
     } else {
       state.auditoria = [];
+      state.auditoriaError = null;
     }
   } catch (e) {
     console.error(e);
@@ -82,9 +85,15 @@ async function login() {
     await authLogin(email, senha);
     checkSessionUi();
     try {
-      await insertAuditoria("sessao_entrada", `Login (${state.sessao.email})`);
+      await recordSessaoEntradaLogin();
     } catch (e) {
       console.warn("Auditoria:", e);
+      if (isAdmin()) {
+        state.auditoriaError =
+          e.message?.includes("auditoria") || e.code === "PGRST205"
+            ? "Falta criar a tabela auditoria no Supabase (ficheiro setup-auditoria.sql)."
+            : e.message;
+      }
     }
     await loadAllData();
     render(showPersonPhoto);
@@ -101,6 +110,7 @@ async function logout() {
   } catch (e) {
     console.warn("Auditoria:", e);
   }
+  clearSessaoAuditFlag();
   await authLogout();
   document.getElementById("loginEmail").value = "";
   document.getElementById("loginPassword").value = "";
@@ -850,7 +860,7 @@ function exportRecords() {
       Entradas: entradasEvento.length,
     };
   });
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(linhas), "Registos");
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(linhas), "Entradas corridas");
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(resumoPorEvento), "Resumo por jornada");
   XLSX.writeFile(wb, "registos_entradas_lptg.xlsx");
 }
@@ -925,6 +935,17 @@ async function init() {
   await restoreSession();
   checkSessionUi();
   if (state.sessao) {
+    try {
+      await recordSessaoEntradaIfNeeded();
+    } catch (e) {
+      console.warn("Auditoria:", e);
+      if (isAdmin()) {
+        state.auditoriaError =
+          e.message?.includes("auditoria") || e.code === "PGRST205"
+            ? "Falta criar a tabela auditoria no Supabase (ficheiro setup-auditoria.sql)."
+            : e.message;
+      }
+    }
     try {
       await loadAllData();
     } catch (e) {
