@@ -10,6 +10,7 @@ import {
   deleteAdministrador,
 } from "./data/administradores.js";
 import { ensureFuncoes } from "./data/funcoes.js";
+import { fetchAuditoria, logAtividade, insertAuditoria } from "./data/auditoria.js";
 import { formatEventText } from "./data/mappers.js";
 import { login as authLogin, logout as authLogout, restoreSession, checkSessionUi, setupAuthListener } from "./features/auth.js";
 import { requireSession, requireAdmin, isAdmin } from "./features/guards.js";
@@ -44,6 +45,16 @@ async function loadAllData() {
     state.administradores = await fetchAdministradores();
     state.entradas = await fetchEntradas();
     state.funcoes = await ensureFuncoes();
+    if (isAdmin()) {
+      try {
+        state.auditoria = await fetchAuditoria();
+      } catch (e) {
+        console.warn("Auditoria:", e);
+        state.auditoria = [];
+      }
+    } else {
+      state.auditoria = [];
+    }
   } catch (e) {
     console.error(e);
     throw e;
@@ -70,6 +81,11 @@ async function login() {
   try {
     await authLogin(email, senha);
     checkSessionUi();
+    try {
+      await insertAuditoria("sessao_entrada", `Login (${state.sessao.email})`);
+    } catch (e) {
+      console.warn("Auditoria:", e);
+    }
     await loadAllData();
     render(showPersonPhoto);
   } catch (e) {
@@ -78,6 +94,13 @@ async function login() {
 }
 
 async function logout() {
+  try {
+    if (state.sessao) {
+      await insertAuditoria("sessao_saida", `Logout (${state.sessao.email})`);
+    }
+  } catch (e) {
+    console.warn("Auditoria:", e);
+  }
   await authLogout();
   document.getElementById("loginEmail").value = "";
   document.getElementById("loginPassword").value = "";
@@ -111,6 +134,10 @@ function screen(id, btn) {
   }
   if (id === "admins" && !isAdmin()) {
     alert("Apenas administradores podem aceder a esta página.");
+    return;
+  }
+  if (id === "atividade" && !isAdmin()) {
+    alert("Apenas administradores podem ver o registo de atividade.");
     return;
   }
   document.querySelectorAll(".page").forEach((p) => p.classList.remove("show"));
@@ -148,6 +175,11 @@ function pessoasNextPage() {
   }
 }
 
+function openAtividadeScreen() {
+  const btn = document.querySelector('.nav[onclick*="atividade"]');
+  screen("atividade", btn || document.querySelector(".nav"));
+}
+
 async function addPerson() {
   try {
     requireSession();
@@ -173,6 +205,7 @@ async function addPerson() {
     state.pessoas.push(novaPessoa);
     document.getElementById("nome").value = "";
     document.getElementById("numero").value = "";
+    logAtividade("pessoa_criada", `${novaPessoa.nome} · ${novaPessoa.funcao} · ${novaPessoa.codigo}`);
     render(showPersonPhoto);
     showNewQRCode(novaPessoa);
   } catch (e) {
@@ -188,9 +221,11 @@ async function deletePerson(id) {
     return;
   }
   if (!confirm("Apagar esta pessoa?")) return;
+  const p = state.pessoas.find((x) => x.id === id);
   try {
     await removePessoa(id);
-    state.pessoas = state.pessoas.filter((p) => p.id !== id);
+    state.pessoas = state.pessoas.filter((x) => x.id !== id);
+    if (p) logAtividade("pessoa_apagada", `${p.nome} · ${p.codigo}`);
     render(showPersonPhoto);
   } catch (e) {
     alert("Erro ao apagar: " + e.message);
@@ -213,6 +248,10 @@ async function toggleStatus(id) {
   try {
     const updated = await updatePessoa(id, { ativo: !p.ativo });
     Object.assign(p, updated);
+    logAtividade(
+      "pessoa_estado",
+      `${p.nome}: ${updated.ativo ? "cartão reativado" : "cartão concluído"}`
+    );
     render(showPersonPhoto);
   } catch (e) {
     alert("Erro ao atualizar: " + e.message);
@@ -235,6 +274,7 @@ async function updatePersonFuncao(id, selectEl) {
   try {
     const updated = await updatePessoa(id, { funcao: novaFuncao });
     Object.assign(p, updated);
+    logAtividade("pessoa_funcao", `${p.nome}: ${anterior} → ${novaFuncao}`);
     render(showPersonPhoto);
   } catch (e) {
     selectEl.value = anterior;
@@ -312,6 +352,11 @@ async function confirmRenewCard() {
       fotoCartao: old.fotoCartao || undefined,
     });
     state.pessoas.push(novaPessoa);
+    logAtividade(
+      "cartao_novo",
+      `${novaPessoa.nome} · ${novaPessoa.funcao} · ${novaPessoa.codigo}` +
+        (old.ativo ? ` (substitui ${old.codigo})` : "")
+    );
     closeRenewCardModal();
     render(showPersonPhoto);
     viewQRCode(novaPessoa.id);
@@ -380,6 +425,7 @@ async function validateEntry() {
     });
 
     state.entradas.unshift(entrada);
+    logAtividade("entrada_validada", `${p.nome} · ${evento} · ${operador}`);
     render(showPersonPhoto);
     out.className = "glass result ok";
     out.innerHTML = `<h3>Entrada autorizada</h3><p><b>${p.nome}</b><br>${p.funcao}<br>${p.numero}<br>Validado por ${operador}</p>`;
@@ -641,6 +687,7 @@ async function toggleAdmin(id) {
   try {
     const updated = await updateAdministrador(id, { ativo: !a.ativo });
     Object.assign(a, updated);
+    logAtividade("admin_estado", `${a.nome} (${a.email}): ${updated.ativo ? "ativado" : "desativado"}`);
     render(showPersonPhoto);
   } catch (e) {
     alert("Erro: " + e.message);
@@ -664,6 +711,7 @@ async function deleteAdmin(id) {
   try {
     await deleteAdministrador(id);
     state.administradores = state.administradores.filter((x) => x.id !== id);
+    logAtividade("admin_apagado", `${a.nome} (${a.email})`);
     render(showPersonPhoto);
   } catch (e) {
     alert("Erro: " + e.message);
@@ -699,6 +747,7 @@ async function addAdmin() {
   try {
     const novo = await insertAdministrador({ nome, email, tipo });
     state.administradores.push(novo);
+    logAtividade("admin_criado", `${nome} (${email}) · ${tipo}`);
     document.getElementById("adminNome").value = "";
     document.getElementById("adminEmail").value = "";
     document.getElementById("adminSenha").value = "";
@@ -736,6 +785,7 @@ async function deleteRegisto(id) {
   try {
     await deleteEntrada(id);
     state.entradas = state.entradas.filter((x) => x.id !== id);
+    logAtividade("entrada_apagada", `${r.nome} · ${r.evento} · ${r.datahora}`);
     render(showPersonPhoto);
   } catch (e) {
     alert("Erro ao eliminar entrada: " + e.message);
@@ -815,6 +865,7 @@ Object.assign(window, {
   toggleMobileMenu,
   closeMobileMenu,
   screen,
+  openAtividadeScreen,
   sortPessoas,
   pessoasPrevPage,
   pessoasNextPage,

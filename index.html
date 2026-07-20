@@ -50,11 +50,11 @@
     <div class="side-title"><span class="dot"></span>Painel de controlo</div>
     <button class="nav active" onclick="screen('dashboard', this)">Dashboard geral</button>
     <button class="nav" onclick="screen('validar', this)">Validação de Entradas</button>
-    <button class="nav" onclick="screen('pessoas', this)">Base de dados</button>
+    <button class="nav nav-with-count" onclick="screen('pessoas', this)"><span>Pessoas registadas</span><span class="nav-count" id="navPessoasCount">0</span></button>
     <button class="nav" onclick="screen('admins', this)">Administradores</button>
     <button class="nav" onclick="screen('nova', this)">Adicionar pessoa</button>
     <button class="nav" onclick="screen('fotos', this)">Fotos de cartão</button>
-    <button class="nav" onclick="screen('registos', this)">Registos</button>
+    <button class="nav nav-with-count" onclick="screen('registos', this)"><span>Entradas validadas</span><span class="nav-count" id="navEntradasCount">0</span></button>
     <button class="nav" onclick="screen('calendario', this)">Calendário</button>
 
     <div class="control-card">

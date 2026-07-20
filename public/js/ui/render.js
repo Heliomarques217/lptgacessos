@@ -1,6 +1,7 @@
 import { state } from "../state.js";
 import { formatEventText } from "../data/mappers.js";
 import { FUNCOES_PADRAO } from "../data/funcoes.js";
+import { labelAcao } from "../data/auditoria.js";
 
 export function getNextEvent() {
   const hoje = new Date();
@@ -235,6 +236,26 @@ export function renderFuncoesSelect() {
   if (old && list.includes(old)) sel.value = old;
 }
 
+function auditRowHtml(r) {
+  return `<tr><td data-label="Data/Hora">${r.datahora}</td><td data-label="Utilizador"><b>${r.operador}</b></td><td data-label="Ação">${labelAcao(r.acao)}</td><td data-label="Detalhe">${r.detalhe}</td></tr>`;
+}
+
+export function renderAuditoria() {
+  const list = state.auditoria || [];
+  const empty =
+    "<tr><td colspan='4'>Sem eventos registados ainda.</td></tr>";
+  const full = document.getElementById("tabelaAtividade");
+  if (full) {
+    full.innerHTML = list.length ? list.map(auditRowHtml).join("") : empty;
+  }
+  const recent = document.getElementById("tabelaAtividadeRecente");
+  if (recent) {
+    recent.innerHTML = list.length
+      ? list.slice(0, 8).map(auditRowHtml).join("")
+      : "<tr><td colspan='4'>Sem eventos recentes.</td></tr>";
+  }
+}
+
 export function render(showPersonPhotoFn) {
   renderPessoas();
   renderFuncoesSelect();
@@ -267,6 +288,7 @@ export function render(showPersonPhotoFn) {
       String(r.datahora).startsWith(hoje)
     ).length;
   }
+  renderAuditoria();
   renderAdmins();
   renderCalendar();
   updateNextEvent();
