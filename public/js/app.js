@@ -680,10 +680,15 @@ async function addAdmin() {
   const nome = document.getElementById("adminNome").value.trim();
   const email = document.getElementById("adminEmail").value.trim().toLowerCase();
   const senha = document.getElementById("adminSenha").value;
+  const senhaConfirm = document.getElementById("adminSenhaConfirm").value;
   const tipo = document.getElementById("adminTipo").value;
 
-  if (!nome || !email || !senha) {
-    alert("Preenche nome, email e senha.");
+  if (!nome || !email || !senha || !senhaConfirm) {
+    alert("Preenche nome, email e ambos os campos de senha.");
+    return;
+  }
+  if (senha !== senhaConfirm) {
+    alert("As senhas não coincidem. Verifica e tenta outra vez.");
     return;
   }
   if (state.administradores.some((a) => a.email.toLowerCase() === email)) {
@@ -697,6 +702,7 @@ async function addAdmin() {
     document.getElementById("adminNome").value = "";
     document.getElementById("adminEmail").value = "";
     document.getElementById("adminSenha").value = "";
+    document.getElementById("adminSenhaConfirm").value = "";
     render(showPersonPhoto);
     alert(
       "Administrador adicionado com sucesso.\n\n" +
