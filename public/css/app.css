@@ -423,6 +423,22 @@ button.btn-sm.btn-safe{
   margin-top:8px;
 }
 
+/* Fotos de cartão: sem foto = vermelho suave (select fechado + opções onde o browser permite) */
+#selectFotoPessoa.select-foto--sem{
+  background:#fff5f5;
+  border-color:rgba(185,28,28,.32);
+  color:#9f1239;
+}
+#selectFotoPessoa option.foto-opt--sem{
+  background:#fff5f5;
+  color:#b91c1c;
+}
+#fotoPreview.foto-preview--sem{
+  background:#fff5f5;
+  border-color:rgba(185,28,28,.28);
+  color:#9f1239;
+}
+
 @media(max-width:700px){
   .card-builder > .glass,
   .form-grid > .glass,

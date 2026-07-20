@@ -17,6 +17,7 @@ import { requireSession, requireAdmin, isAdmin } from "./features/guards.js";
 import {
   populateEvents,
   render,
+  syncFotoPessoaSelectStyle,
   getValidarEvento,
   onValidarEventoChange,
 } from "./ui/render.js";
@@ -548,6 +549,8 @@ function showPersonPhoto(resetPreview = false) {
       box.innerHTML = `<img src="${state.fotoTemporaria}" alt="Foto do cartão">`;
     }
     if (info) info.textContent = "—";
+    box.classList.remove("foto-preview--sem");
+    syncFotoPessoaSelectStyle();
     return;
   }
 
@@ -556,12 +559,16 @@ function showPersonPhoto(resetPreview = false) {
 
   if (state.fotoTemporaria) {
     box.innerHTML = `<img src="${state.fotoTemporaria}" alt="Foto do cartão">`;
+    box.classList.remove("foto-preview--sem");
   } else if (p.fotoCartao) {
     box.innerHTML = `<img src="${p.fotoCartao}" alt="Foto do cartão">`;
+    box.classList.remove("foto-preview--sem");
   } else {
     box.innerHTML = "<span>Sem foto associada</span>";
+    box.classList.add("foto-preview--sem");
   }
   info.textContent = `${p.nome} · ${p.funcao} · ${p.codigo}`;
+  syncFotoPessoaSelectStyle();
 }
 
 async function saveCardPhoto() {

@@ -252,6 +252,40 @@ export function renderAuditoria() {
   }
 }
 
+function pessoaTemFotoCartao(p) {
+  return Boolean(p.fotoCartao && String(p.fotoCartao).trim());
+}
+
+function buildFotoPessoaSelectHtml() {
+  const comFoto = [];
+  const semFoto = [];
+  state.pessoas.forEach((p, i) => {
+    const label = `${p.nome} - ${p.funcao}`;
+    const cls = pessoaTemFotoCartao(p) ? "foto-opt--com" : "foto-opt--sem";
+    const opt = `<option class="${cls}" value="${i}">${label}</option>`;
+    if (pessoaTemFotoCartao(p)) comFoto.push(opt);
+    else semFoto.push(opt);
+  });
+  let html = `<option value="">— Escolhe uma pessoa —</option>`;
+  if (comFoto.length) {
+    html += `<optgroup label="Com foto (${comFoto.length})">${comFoto.join("")}</optgroup>`;
+  }
+  if (semFoto.length) {
+    html += `<optgroup label="Sem foto (${semFoto.length})">${semFoto.join("")}</optgroup>`;
+  }
+  return html;
+}
+
+export function syncFotoPessoaSelectStyle() {
+  const sel = document.getElementById("selectFotoPessoa");
+  if (!sel) return;
+  sel.classList.remove("select-foto--sem", "select-foto--com");
+  if (sel.value === "") return;
+  const p = state.pessoas[Number(sel.value)];
+  if (!p) return;
+  sel.classList.add(pessoaTemFotoCartao(p) ? "select-foto--com" : "select-foto--sem");
+}
+
 export function render(showPersonPhotoFn) {
   renderPessoas();
   renderFuncoesSelect();
@@ -268,11 +302,10 @@ export function render(showPersonPhotoFn) {
   const selFoto = document.getElementById("selectFotoPessoa");
   if (selFoto) {
     const oldFoto = selFoto.value;
-    selFoto.innerHTML =
-      `<option value="">— Escolhe uma pessoa —</option>` +
-      state.pessoas.map((p, i) => `<option value="${i}">${p.nome} - ${p.funcao}</option>`).join("");
+    selFoto.innerHTML = buildFotoPessoaSelectHtml();
     selFoto.value =
       oldFoto !== "" && state.pessoas[Number(oldFoto)] !== undefined ? oldFoto : "";
+    syncFotoPessoaSelectStyle();
     if (showPersonPhotoFn) showPersonPhotoFn();
   }
   const hoje = new Date().toLocaleDateString("pt-PT");
