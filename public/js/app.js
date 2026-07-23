@@ -45,7 +45,7 @@ async function loadAllData() {
     state.pessoas = await fetchPessoas();
     state.administradores = await fetchAdministradores();
     state.entradas = await fetchEntradas();
-    state.funcoes = await ensureFuncoes();
+    state.funcoes = await ensureFuncoes({ syncMissing: isAdmin() });
     if (isAdmin()) {
       try {
         state.auditoria = await fetchAuditoria();

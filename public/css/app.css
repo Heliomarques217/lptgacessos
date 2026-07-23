@@ -39,9 +39,21 @@ body{
   background:rgba(255,255,255,.78);
   backdrop-filter:blur(16px);
   border-bottom:1px solid var(--line);
+}
+.app-header-zone{
   position:sticky;
   top:0;
   z-index:10;
+}
+.official-partners-bar{
+  background:var(--bg);
+  padding:10px 32px 14px;
+  border-bottom:1px solid var(--line);
+}
+.official-partners-bar .official-strip{
+  margin:0 auto;
+  width:fit-content;
+  max-width:100%;
 }
 .brand{display:flex;align-items:center;gap:16px}
 .brand img{
@@ -619,16 +631,20 @@ body.menu-open .menu-backdrop{
 
 /* Ajuste responsivo PC + telemóvel */
 @media(max-width:900px){
-  .topbar{
-    position:sticky;
-    top:0;
+  .app-header-zone{
     z-index:100;
+  }
+
+  .topbar{
     padding:14px 16px;
     gap:12px;
     flex-direction:row;
     align-items:center;
-    flex-wrap:wrap;
+    flex-wrap:nowrap;
+    height:auto;
+    min-height:72px;
     padding-top:calc(14px + env(safe-area-inset-top));
+    border-bottom:none;
   }
 
   .menu-toggle{
@@ -651,24 +667,28 @@ body.menu-open .menu-backdrop{
     line-height:1.35;
   }
 
-  .official-strip{
-    flex:0 0 100%;
-    width:100%;
-    max-width:100%;
-    order:3;
-    margin:8px 0 0;
-    padding:8px 10px;
-    border-radius:14px;
-    align-self:stretch;
-    box-sizing:border-box;
+  .official-partners-bar{
+    padding:12px 16px 14px;
   }
 
-  .official-strip img{
+  .official-partners-bar .official-strip{
+    background:transparent;
+    border:none;
+    box-shadow:none;
+    padding:0;
+    margin:0;
+    width:100%;
+    max-width:100%;
+    line-height:0;
+  }
+
+  .official-partners-bar .official-strip img{
+    display:block;
     width:100%;
     max-width:100%;
     height:auto;
-    max-height:34px;
-    margin:0 auto;
+    max-height:36px;
+    margin:0;
     object-fit:contain;
     object-position:center;
   }
