@@ -7,6 +7,7 @@ export const FUNCOES_PADRAO = [
   "Segundo secretário",
   "Tesoureiro/a",
   "Staff",
+  "Fotógrafo Oficial",
   "Veterinário/a",
   "Jockey/Driver",
   "Jockey Aprendiz",

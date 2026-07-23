@@ -77,6 +77,38 @@ export async function refreshAllFromSupabase() {
   }
 }
 
+const DASHBOARD_REFRESH_MS = 5000;
+let dashboardRefreshTimer = null;
+let dashboardRefreshInFlight = false;
+
+function isDashboardVisible() {
+  return document.getElementById("dashboard")?.classList.contains("show") ?? false;
+}
+
+function clearDashboardRefreshTimer() {
+  if (dashboardRefreshTimer != null) {
+    clearInterval(dashboardRefreshTimer);
+    dashboardRefreshTimer = null;
+  }
+}
+
+async function tickDashboardRefresh() {
+  if (document.hidden || !state.sessao || !isDashboardVisible()) return;
+  if (dashboardRefreshInFlight) return;
+  dashboardRefreshInFlight = true;
+  try {
+    await refreshAllFromSupabase();
+  } finally {
+    dashboardRefreshInFlight = false;
+  }
+}
+
+function scheduleDashboardRefresh() {
+  clearDashboardRefreshTimer();
+  if (!state.sessao || !isDashboardVisible()) return;
+  dashboardRefreshTimer = setInterval(tickDashboardRefresh, DASHBOARD_REFRESH_MS);
+}
+
 async function login() {
   const email = document.getElementById("loginEmail").value.trim().toLowerCase();
   const senha = document.getElementById("loginPassword").value;
@@ -98,6 +130,7 @@ async function login() {
     }
     await loadAllData();
     render(showPersonPhoto);
+    scheduleDashboardRefresh();
   } catch (e) {
     erro.textContent = e.message || "Não foi possível entrar.";
   }
@@ -112,6 +145,7 @@ async function logout() {
     console.warn("Auditoria:", e);
   }
   clearSessaoAuditFlag();
+  clearDashboardRefreshTimer();
   await authLogout();
   document.getElementById("loginEmail").value = "";
   document.getElementById("loginPassword").value = "";
@@ -158,6 +192,8 @@ function screen(id, btn) {
   closeMobileMenu();
   if (id === "fotos") resetFotoTab();
   render(showPersonPhoto);
+  if (id === "dashboard") scheduleDashboardRefresh();
+  else clearDashboardRefreshTimer();
 }
 
 function sortPessoas(field) {
@@ -913,7 +949,12 @@ Object.assign(window, {
 });
 
 document.addEventListener("visibilitychange", () => {
-  if (!document.hidden) refreshAllFromSupabase();
+  if (!document.hidden) {
+    refreshAllFromSupabase();
+    scheduleDashboardRefresh();
+  } else {
+    clearDashboardRefreshTimer();
+  }
 });
 window.addEventListener("focus", refreshAllFromSupabase);
 
@@ -955,6 +996,7 @@ async function init() {
     }
   }
   render(showPersonPhoto);
+  if (state.sessao) scheduleDashboardRefresh();
 }
 
 init();
