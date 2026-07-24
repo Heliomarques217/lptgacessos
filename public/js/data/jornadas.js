@@ -10,6 +10,7 @@ function mapSeedJornada(j) {
     dataPT: j.dataPT,
     hipodromo: j.hipodromo,
     ordem: j.ordem,
+    anulada: Boolean(j.anulada),
   };
 }
 
@@ -52,6 +53,7 @@ export async function ensureCalendarioOficial() {
     data_pt: j.dataPT,
     hipodromo: j.hipodromo,
     ordem: j.ordem,
+    anulada: false,
   }));
 
   try {

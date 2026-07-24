@@ -11,7 +11,7 @@ import {
 } from "./data/administradores.js";
 import { ensureFuncoes } from "./data/funcoes.js";
 import { fetchAuditoria, logAtividade, insertAuditoria, recordSessaoEntradaIfNeeded, recordSessaoEntradaLogin, clearSessaoAuditFlag } from "./data/auditoria.js";
-import { formatEventText } from "./data/mappers.js";
+import { formatEventText, isJornadaAtiva } from "./data/mappers.js";
 import { login as authLogin, logout as authLogout, restoreSession, checkSessionUi, setupAuthListener } from "./features/auth.js";
 import { requireSession, requireAdmin, isAdmin } from "./features/guards.js";
 import {
@@ -431,6 +431,12 @@ async function validateEntry() {
   if (!evento) {
     out.className = "glass result no";
     out.innerHTML = "<h3>Escolhe a jornada</h3><p>Selecciona a jornada / hipódromo onde estás a validar entradas.</p>";
+    return;
+  }
+  const jornadaSel = state.jornadas.find((j) => formatEventText(j) === evento);
+  if (jornadaSel && !isJornadaAtiva(jornadaSel)) {
+    out.className = "glass result no";
+    out.innerHTML = `<h3>Jornada anulada</h3><p><b>${jornadaSel.jornada}</b> (${jornadaSel.hipodromo}) foi anulada. Escolhe outra jornada para validar entradas.</p>`;
     return;
   }
   const operador = document.getElementById("operador").value.trim() || "Não identificado";
@@ -865,6 +871,7 @@ function exportDatabase() {
     Jornada: j.jornada,
     Data: j.dataPT,
     Hipódromo: j.hipodromo,
+    Estado: j.anulada ? "Anulada" : "Agendada",
     "Entradas registadas": state.entradas.filter((r) => r.evento === formatEventText(j)).length,
   }));
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(pessoasSheet), "Pessoas");
@@ -895,6 +902,7 @@ function exportRecords() {
       Jornada: j.jornada,
       Data: j.dataPT,
       Hipódromo: j.hipodromo,
+      Estado: j.anulada ? "Anulada" : "Agendada",
       Entradas: entradasEvento.length,
     };
   });

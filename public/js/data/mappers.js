@@ -18,7 +18,12 @@ export function mapJornada(row) {
     dataPT: row.data_pt || row.dataPT || "",
     hipodromo: row.hipodromo,
     ordem: row.ordem,
+    anulada: Boolean(row.anulada),
   };
+}
+
+export function isJornadaAtiva(j) {
+  return Boolean(j && !j.anulada);
 }
 
 export function mapAdministrador(row) {

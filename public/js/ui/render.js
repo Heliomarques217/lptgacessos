@@ -1,15 +1,20 @@
 import { state } from "../state.js";
-import { formatEventText } from "../data/mappers.js";
+import { formatEventText, isJornadaAtiva } from "../data/mappers.js";
 import { FUNCOES_PADRAO } from "../data/funcoes.js";
 import { labelAcao } from "../data/auditoria.js";
 
 export function getNextEvent() {
   const hoje = new Date();
   hoje.setHours(0, 0, 0, 0);
+  const activas = state.jornadas.filter(isJornadaAtiva);
   return (
-    state.jornadas.find((j) => new Date(j.data + "T00:00:00") >= hoje) ||
-    state.jornadas[state.jornadas.length - 1]
+    activas.find((j) => new Date(j.data + "T00:00:00") >= hoje) ||
+    activas[activas.length - 1]
   );
+}
+
+function jornadasActivas() {
+  return state.jornadas.filter(isJornadaAtiva);
 }
 
 const VALIDAR_EVENTO_KEY = "lptg_validar_evento";
@@ -53,7 +58,7 @@ export function populateValidarEventos() {
 
   sel.innerHTML =
     `<option value="">— Selecionar jornada —</option>` +
-    state.jornadas
+    jornadasActivas()
       .map((j) => {
         const evento = formatEventText(j);
         return `<option value="${evento}">${evento}</option>`;
@@ -61,8 +66,9 @@ export function populateValidarEventos() {
       .join("");
 
   const prox = getNextEvent();
+  const savedJ = saved ? findJornadaByEventoText(saved) : null;
   const defaultVal =
-    (saved && findJornadaByEventoText(saved) && saved) || (prox && formatEventText(prox)) || "";
+    (savedJ && isJornadaAtiva(savedJ) && saved) || (prox && formatEventText(prox)) || "";
 
   if (defaultVal) {
     sel.value = defaultVal;
@@ -90,7 +96,7 @@ export function populateEvents() {
   const select = document.getElementById("evento");
   if (!select) return;
   const atual = select.value;
-  select.innerHTML = state.jornadas
+  select.innerHTML = jornadasActivas()
     .map((j) => {
       const evento = formatEventText(j);
       return `<option value="${evento}">${evento}</option>`;
@@ -113,6 +119,25 @@ export function updateNextEvent() {
   el.textContent = `${j.jornada} · ${j.hipodromo.replace("Hipódromo de ", "").replace("Hipódromo da ", "")}`;
   document.getElementById("nextEventDetails").textContent = `${j.dataPT} · ${j.hipodromo}`;
   document.getElementById("nextEventDays").textContent = dias;
+}
+
+export function renderJornadasAnuladas() {
+  const panel = document.getElementById("jornadasAnuladasPanel");
+  const list = document.getElementById("jornadasAnuladasList");
+  if (!panel || !list) return;
+  const anuladas = state.jornadas.filter((j) => j.anulada);
+  if (!anuladas.length) {
+    panel.hidden = true;
+    list.innerHTML = "";
+    return;
+  }
+  panel.hidden = false;
+  list.innerHTML = anuladas
+    .map(
+      (j) =>
+        `<li><b>${j.jornada}</b> · ${j.dataPT} · ${j.hipodromo} <span class="badge off">Anulada</span></li>`
+    )
+    .join("");
 }
 
 export function renderAdmins() {
@@ -139,7 +164,11 @@ export function renderCalendar() {
     .map((j) => {
       const evento = formatEventText(j);
       const entradas = state.entradas.filter((r) => r.evento === evento).length;
-      return `<tr><td data-label="Jornada"><b>${j.jornada}</b></td><td data-label="Data">${j.dataPT}</td><td data-label="Hipódromo">${j.hipodromo}</td><td data-label="Entradas"><span class="badge">${entradas}</span></td></tr>`;
+      const estado = j.anulada
+        ? `<span class="badge off">Anulada</span>`
+        : `<span class="badge">Agendada</span>`;
+      const rowClass = j.anulada ? " class=\"jornada-anulada\"" : "";
+      return `<tr${rowClass}><td data-label="Jornada"><b>${j.jornada}</b></td><td data-label="Data">${j.dataPT}</td><td data-label="Hipódromo">${j.hipodromo}</td><td data-label="Estado">${estado}</td><td data-label="Entradas"><span class="badge">${entradas}</span></td></tr>`;
     })
     .join("");
 }
@@ -321,4 +350,5 @@ export function render(showPersonPhotoFn) {
   renderAdmins();
   renderCalendar();
   updateNextEvent();
+  renderJornadasAnuladas();
 }
