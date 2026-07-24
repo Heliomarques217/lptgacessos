@@ -272,17 +272,9 @@ function auditRowHtml(r) {
 function getFilteredAuditoria() {
   const { utilizador, acao } = state.auditoriaTable;
   let list = state.auditoria || [];
-  const q = utilizador.trim().toLowerCase();
-  if (q) {
-    list = list.filter(
-      (r) =>
-        String(r.operador || "")
-          .toLowerCase()
-          .includes(q) ||
-        String(r.email || "")
-          .toLowerCase()
-          .includes(q)
-    );
+  if (utilizador) {
+    const nome = utilizador.trim().toLowerCase();
+    list = list.filter((r) => String(r.operador || "").toLowerCase() === nome);
   }
   if (acao) {
     list = list.filter((r) => r.acao === acao);
@@ -299,14 +291,35 @@ function syncAuditoriaAcaoFilter() {
   const sel = document.getElementById("auditoriaAcaoFilter");
   if (!sel || sel.dataset.ready) return;
   const options = Object.entries(ACAO_LABELS)
+    .sort(([, a], [, b]) => a.localeCompare(b, "pt"))
     .map(([value, label]) => `<option value="${value}">${label}</option>`)
     .join("");
   sel.innerHTML = `<option value="">Todas as ações</option>${options}`;
   sel.dataset.ready = "1";
 }
 
+function syncAuditoriaUtilizadorFilter() {
+  const sel = document.getElementById("auditoriaUtilizadorFilter");
+  if (!sel) return;
+  const admins = [...(state.administradores || [])].sort((a, b) =>
+    a.nome.localeCompare(b.nome, "pt")
+  );
+  const signature = admins.map((a) => a.id).join("|");
+  if (sel.dataset.admins !== signature) {
+    const options = admins
+      .map((a) => `<option value="${a.nome}">${a.nome}</option>`)
+      .join("");
+    sel.innerHTML = `<option value="">Todos os utilizadores</option>${options}`;
+    sel.dataset.admins = signature;
+  }
+  if (sel.value !== state.auditoriaTable.utilizador) {
+    sel.value = state.auditoriaTable.utilizador;
+  }
+}
+
 export function renderAuditoria() {
   syncAuditoriaAcaoFilter();
+  syncAuditoriaUtilizadorFilter();
 
   const err = state.auditoriaError;
   const all = state.auditoria || [];
@@ -336,11 +349,6 @@ export function renderAuditoria() {
   const full = document.getElementById("tabelaAtividade");
   if (full) {
     full.innerHTML = slice.length ? slice.map(auditRowHtml).join("") : empty;
-  }
-
-  const userInput = document.getElementById("auditoriaUtilizadorFilter");
-  if (userInput && userInput.value !== state.auditoriaTable.utilizador) {
-    userInput.value = state.auditoriaTable.utilizador;
   }
 
   const acaoSel = document.getElementById("auditoriaAcaoFilter");

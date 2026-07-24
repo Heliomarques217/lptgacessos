@@ -277,7 +277,9 @@
         <div class="audit-toolbar">
           <label class="audit-filter">
             <span>Utilizador</span>
-            <input id="auditoriaUtilizadorFilter" type="search" placeholder="Nome ou email…" oninput="filterAuditoriaUtilizador(this.value)">
+            <select id="auditoriaUtilizadorFilter" onchange="filterAuditoriaUtilizador(this.value)">
+              <option value="">Todos os utilizadores</option>
+            </select>
           </label>
           <label class="audit-filter">
             <span>Ação</span>
