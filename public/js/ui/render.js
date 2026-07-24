@@ -1,7 +1,7 @@
 import { state } from "../state.js";
 import { formatEventText, isJornadaAtiva } from "../data/mappers.js";
 import { FUNCOES_PADRAO } from "../data/funcoes.js";
-import { labelAcao } from "../data/auditoria.js";
+import { ACAO_LABELS, labelAcao } from "../data/auditoria.js";
 
 export function getNextEvent() {
   const hoje = new Date();
@@ -269,16 +269,102 @@ function auditRowHtml(r) {
   return `<tr><td data-label="Data/Hora">${r.datahora}</td><td data-label="Utilizador"><b>${r.operador}</b></td><td data-label="Ação">${labelAcao(r.acao)}</td><td data-label="Detalhe">${r.detalhe}</td></tr>`;
 }
 
+function getFilteredAuditoria() {
+  const { utilizador, acao } = state.auditoriaTable;
+  let list = state.auditoria || [];
+  const q = utilizador.trim().toLowerCase();
+  if (q) {
+    list = list.filter(
+      (r) =>
+        String(r.operador || "")
+          .toLowerCase()
+          .includes(q) ||
+        String(r.email || "")
+          .toLowerCase()
+          .includes(q)
+    );
+  }
+  if (acao) {
+    list = list.filter((r) => r.acao === acao);
+  }
+  return list;
+}
+
+export function getAuditoriaTotalPages() {
+  const { pageSize } = state.auditoriaTable;
+  return Math.max(1, Math.ceil(getFilteredAuditoria().length / pageSize));
+}
+
+function syncAuditoriaAcaoFilter() {
+  const sel = document.getElementById("auditoriaAcaoFilter");
+  if (!sel || sel.dataset.ready) return;
+  const options = Object.entries(ACAO_LABELS)
+    .map(([value, label]) => `<option value="${value}">${label}</option>`)
+    .join("");
+  sel.innerHTML = `<option value="">Todas as ações</option>${options}`;
+  sel.dataset.ready = "1";
+}
+
 export function renderAuditoria() {
-  const list = state.auditoria || [];
+  syncAuditoriaAcaoFilter();
+
   const err = state.auditoriaError;
-  const empty = err
-    ? `<tr><td colspan="4">${err}</td></tr>`
-    : "<tr><td colspan='4'>Sem eventos registados ainda.</td></tr>";
+  const all = state.auditoria || [];
+  const filtered = getFilteredAuditoria();
+  const { pageSize } = state.auditoriaTable;
+  const total = filtered.length;
+  const totalPages = getAuditoriaTotalPages();
+  let page = state.auditoriaTable.page;
+  if (page > totalPages) page = totalPages;
+  if (page < 1) page = 1;
+  state.auditoriaTable.page = page;
+
+  const start = (page - 1) * pageSize;
+  const slice = filtered.slice(start, start + pageSize);
+
+  let empty;
+  if (err) {
+    empty = `<tr><td colspan="4">${err}</td></tr>`;
+  } else if (!all.length) {
+    empty = "<tr><td colspan='4'>Sem eventos registados ainda.</td></tr>";
+  } else if (!total) {
+    empty = "<tr><td colspan='4'>Nenhum movimento encontrado com estes filtros.</td></tr>";
+  } else {
+    empty = "";
+  }
+
   const full = document.getElementById("tabelaAtividade");
   if (full) {
-    full.innerHTML = list.length ? list.map(auditRowHtml).join("") : empty;
+    full.innerHTML = slice.length ? slice.map(auditRowHtml).join("") : empty;
   }
+
+  const userInput = document.getElementById("auditoriaUtilizadorFilter");
+  if (userInput && userInput.value !== state.auditoriaTable.utilizador) {
+    userInput.value = state.auditoriaTable.utilizador;
+  }
+
+  const acaoSel = document.getElementById("auditoriaAcaoFilter");
+  if (acaoSel && acaoSel.value !== state.auditoriaTable.acao) {
+    acaoSel.value = state.auditoriaTable.acao;
+  }
+
+  const info = document.getElementById("auditoriaPageInfo");
+  if (info) {
+    if (err || !all.length) {
+      info.textContent = "—";
+    } else if (!total) {
+      info.textContent = "0 movimentos";
+    } else {
+      const from = start + 1;
+      const to = Math.min(start + pageSize, total);
+      info.textContent = `${from}–${to} de ${total} · Página ${page} de ${totalPages}`;
+    }
+  }
+
+  const prev = document.getElementById("auditoriaPrev");
+  const next = document.getElementById("auditoriaNext");
+  if (prev) prev.disabled = page <= 1 || !total;
+  if (next) next.disabled = page >= totalPages || !total;
 }
 
 function pessoaTemFotoCartao(p) {

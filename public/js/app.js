@@ -20,6 +20,7 @@ import {
   syncFotoPessoaSelectStyle,
   getValidarEvento,
   onValidarEventoChange,
+  getAuditoriaTotalPages,
 } from "./ui/render.js";
 
 function uid() {
@@ -218,6 +219,32 @@ function pessoasNextPage() {
   const totalPages = Math.max(1, Math.ceil(state.pessoas.length / state.pessoasTable.pageSize));
   if (state.pessoasTable.page < totalPages) {
     state.pessoasTable.page += 1;
+    render(showPersonPhoto);
+  }
+}
+
+function filterAuditoriaUtilizador(value) {
+  state.auditoriaTable.utilizador = value;
+  state.auditoriaTable.page = 1;
+  render(showPersonPhoto);
+}
+
+function filterAuditoriaAcao(value) {
+  state.auditoriaTable.acao = value;
+  state.auditoriaTable.page = 1;
+  render(showPersonPhoto);
+}
+
+function auditoriaPrevPage() {
+  if (state.auditoriaTable.page > 1) {
+    state.auditoriaTable.page -= 1;
+    render(showPersonPhoto);
+  }
+}
+
+function auditoriaNextPage() {
+  if (state.auditoriaTable.page < getAuditoriaTotalPages()) {
+    state.auditoriaTable.page += 1;
     render(showPersonPhoto);
   }
 }
@@ -924,6 +951,10 @@ Object.assign(window, {
   sortPessoas,
   pessoasPrevPage,
   pessoasNextPage,
+  filterAuditoriaUtilizador,
+  filterAuditoriaAcao,
+  auditoriaPrevPage,
+  auditoriaNextPage,
   addPerson,
   deletePerson,
   toggleStatus,

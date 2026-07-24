@@ -155,6 +155,31 @@ h1{font-size:24px;letter-spacing:-.04em}
 .nav:hover,.nav.active{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.16);transform:translateX(3px)}
 .audit-table td,.audit-table th{font-size:13px}
 .audit-table td:nth-child(4){max-width:420px;word-break:break-word}
+.audit-toolbar{
+  display:flex;
+  flex-wrap:wrap;
+  gap:14px 18px;
+  padding:18px 18px 0;
+  align-items:flex-end;
+}
+.audit-filter{
+  flex:1 1 220px;
+  min-width:0;
+  margin:0;
+}
+.audit-filter span{
+  display:block;
+  font-size:12px;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.05em;
+  color:var(--muted);
+  margin:0 0 8px;
+}
+.audit-filter input,
+.audit-filter select{
+  margin:0;
+}
 .control-card{margin-top:24px;padding:18px;border-radius:20px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.12)}
 label{display:block;font-size:13px;font-weight:900;margin:12px 0 8px;color:inherit}
 input,select{width:100%;border:1px solid var(--line);background:white;color:var(--text);padding:14px 13px;border-radius:14px;font-size:15px;outline:none}

@@ -273,7 +273,28 @@
 
     <section id="atividade" class="page">
       <div class="section-head"><div><span class="eyebrow">Auditoria</span><h2>Registo de atividade</h2><p>Entradas e saídas na app e alterações feitas por administradores e staff. <strong>Não confundir com «Entradas corridas»</strong> (validações na porta).</p></div></div>
-      <div class="glass overflow"><table class="audit-table"><thead><tr><th>Data/Hora</th><th>Utilizador</th><th>Ação</th><th>Detalhe</th></tr></thead><tbody id="tabelaAtividade"></tbody></table></div>
+      <div class="glass overflow">
+        <div class="audit-toolbar">
+          <label class="audit-filter">
+            <span>Utilizador</span>
+            <input id="auditoriaUtilizadorFilter" type="search" placeholder="Nome ou email…" oninput="filterAuditoriaUtilizador(this.value)">
+          </label>
+          <label class="audit-filter">
+            <span>Ação</span>
+            <select id="auditoriaAcaoFilter" onchange="filterAuditoriaAcao(this.value)">
+              <option value="">Todas as ações</option>
+            </select>
+          </label>
+        </div>
+        <table class="audit-table"><thead><tr><th>Data/Hora</th><th>Utilizador</th><th>Ação</th><th>Detalhe</th></tr></thead><tbody id="tabelaAtividade"></tbody></table>
+        <div class="table-pagination" id="auditoriaPagination">
+          <span id="auditoriaPageInfo">—</span>
+          <div class="pagination-actions">
+            <button type="button" id="auditoriaPrev" onclick="auditoriaPrevPage()">Anterior</button>
+            <button type="button" id="auditoriaNext" onclick="auditoriaNextPage()">Seguinte</button>
+          </div>
+        </div>
+      </div>
     </section>
 
     <section id="calendario" class="page">
