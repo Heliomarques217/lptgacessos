@@ -21,6 +21,11 @@ export async function deleteEntrada(id) {
   if (error) throw error;
 }
 
+export async function deleteAllEntradas() {
+  const { error } = await supabase.from("entradas").delete().not("id", "is", null);
+  if (error) throw error;
+}
+
 export async function findEntrada(evento, codigo) {
   const { data, error } = await supabase
     .from("entradas")

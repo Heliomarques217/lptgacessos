@@ -267,8 +267,17 @@
     </section>
 
     <section id="registos" class="page">
-      <div class="section-head inline"><div><span class="eyebrow">Histórico</span><h2>Entradas corridas</h2><p>Lista com hora, evento, pessoa validada e responsável pela validação.</p></div><button onclick="exportRecords()">Exportar Excel</button></div>
-      <div class="glass overflow"><table><thead><tr><th>Data/Hora</th><th>Evento</th><th>Nome</th><th>Função</th><th>Validado por</th><th>Ações</th></tr></thead><tbody id="tabelaRegistos"></tbody></table></div>
+      <div class="section-head inline"><div><span class="eyebrow">Histórico</span><h2>Entradas corridas</h2><p>Lista com hora, evento, pessoa validada e responsável pela validação.</p></div><div class="actions"><button onclick="exportRecords()">Exportar Excel</button><button type="button" class="btn-danger" onclick="deleteAllRegistos()">Eliminar todas</button></div></div>
+      <div class="glass overflow">
+        <table><thead><tr><th>Data/Hora</th><th>Evento</th><th>Nome</th><th>Função</th><th>Validado por</th><th>Ações</th></tr></thead><tbody id="tabelaRegistos"></tbody></table>
+        <div class="table-pagination" id="registosPagination">
+          <span id="registosPageInfo">—</span>
+          <div class="pagination-actions">
+            <button type="button" id="registosPrev" onclick="registosPrevPage()">Anterior</button>
+            <button type="button" id="registosNext" onclick="registosNextPage()">Seguinte</button>
+          </div>
+        </div>
+      </div>
     </section>
 
     <section id="atividade" class="page">

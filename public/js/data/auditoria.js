@@ -100,6 +100,7 @@ export const ACAO_LABELS = {
   cartao_novo: "Novo cartão",
   entrada_validada: "Entrada validada",
   entrada_apagada: "Entrada eliminada",
+  entradas_limpa: "Todas as entradas eliminadas",
   admin_criado: "Acesso criado",
   admin_apagado: "Acesso apagado",
   admin_estado: "Estado de acesso",

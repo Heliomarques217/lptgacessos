@@ -2,7 +2,7 @@ import { isConfigured } from "./supabase.js";
 import { state } from "./state.js";
 import { fetchPessoas, insertPessoa, updatePessoa, deletePessoa as removePessoa } from "./data/pessoas.js";
 import { ensureCalendarioOficial } from "./data/jornadas.js";
-import { fetchEntradas, insertEntrada, findEntrada, deleteEntrada } from "./data/entradas.js";
+import { fetchEntradas, insertEntrada, findEntrada, deleteEntrada, deleteAllEntradas } from "./data/entradas.js";
 import {
   fetchAdministradores,
   insertAdministrador,
@@ -21,6 +21,7 @@ import {
   getValidarEvento,
   onValidarEventoChange,
   getAuditoriaTotalPages,
+  getEntradasTotalPages,
 } from "./ui/render.js";
 
 function uid() {
@@ -873,6 +874,57 @@ async function deleteRegisto(id) {
   }
 }
 
+function registosPrevPage() {
+  if (state.entradasTable.page > 1) {
+    state.entradasTable.page -= 1;
+    render(showPersonPhoto);
+  }
+}
+
+function registosNextPage() {
+  if (state.entradasTable.page < getEntradasTotalPages()) {
+    state.entradasTable.page += 1;
+    render(showPersonPhoto);
+  }
+}
+
+async function deleteAllRegistos() {
+  try {
+    requireSession();
+  } catch (e) {
+    alert(e.message);
+    return;
+  }
+  const total = state.entradas.length;
+  if (!total) {
+    alert("Não há entradas para eliminar.");
+    return;
+  }
+  if (
+    !confirm(
+      `Vais eliminar TODAS as ${total} entradas registadas.\n\nEsta ação não pode ser desfeita. Queres continuar?`
+    )
+  ) {
+    return;
+  }
+  if (
+    !confirm(
+      `Confirmação final: eliminar definitivamente as ${total} entradas?\n\nClica OK apenas se tiveres a certeza absoluta.`
+    )
+  ) {
+    return;
+  }
+  try {
+    await deleteAllEntradas();
+    state.entradas = [];
+    state.entradasTable.page = 1;
+    logAtividade("entradas_limpa", `${total} entradas eliminadas`);
+    render(showPersonPhoto);
+  } catch (e) {
+    alert("Erro ao eliminar entradas: " + e.message);
+  }
+}
+
 function exportDatabase() {
   try {
     requireSession();
@@ -983,6 +1035,9 @@ Object.assign(window, {
   exportDatabase,
   exportRecords,
   deleteRegisto,
+  deleteAllRegistos,
+  registosPrevPage,
+  registosNextPage,
   importDatabase,
   refreshAllFromSupabase,
 });

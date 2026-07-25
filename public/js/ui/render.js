@@ -399,6 +399,52 @@ function buildFotoPessoaSelectHtml() {
   return html;
 }
 
+export function getEntradasTotalPages() {
+  const { pageSize } = state.entradasTable;
+  return Math.max(1, Math.ceil((state.entradas || []).length / pageSize));
+}
+
+export function renderRegistos() {
+  const tr = document.getElementById("tabelaRegistos");
+  if (!tr) return;
+
+  const list = state.entradas || [];
+  const { pageSize } = state.entradasTable;
+  const total = list.length;
+  const totalPages = getEntradasTotalPages();
+  let page = state.entradasTable.page;
+  if (page > totalPages) page = totalPages;
+  if (page < 1) page = 1;
+  state.entradasTable.page = page;
+
+  const start = (page - 1) * pageSize;
+  const slice = list.slice(start, start + pageSize);
+
+  tr.innerHTML =
+    slice
+      .map(
+        (r) =>
+          `<tr><td data-label="Data/Hora">${r.datahora}</td><td data-label="Evento">${r.evento}</td><td data-label="Nome"><b>${r.nome}</b></td><td data-label="Função">${r.funcao}</td><td data-label="Validado por">${r.operador}</td><td data-label="Ações"><div class="actions-cell">${r.id ? `<button class="btn-danger" onclick="deleteRegisto('${r.id}')">Eliminar</button>` : ""}</div></td></tr>`
+      )
+      .join("") || `<tr><td colspan="6">Sem entradas registadas.</td></tr>`;
+
+  const info = document.getElementById("registosPageInfo");
+  if (info) {
+    if (!total) {
+      info.textContent = "Nenhuma entrada registada";
+    } else {
+      const from = start + 1;
+      const to = Math.min(start + pageSize, total);
+      info.textContent = `${from}–${to} de ${total} · Página ${page} de ${totalPages}`;
+    }
+  }
+
+  const prev = document.getElementById("registosPrev");
+  const next = document.getElementById("registosNext");
+  if (prev) prev.disabled = page <= 1 || !total;
+  if (next) next.disabled = page >= totalPages || !total;
+}
+
 export function syncFotoPessoaSelectStyle() {
   const sel = document.getElementById("selectFotoPessoa");
   if (!sel) return;
@@ -412,16 +458,7 @@ export function syncFotoPessoaSelectStyle() {
 export function render(showPersonPhotoFn) {
   renderPessoas();
   renderFuncoesSelect();
-  const tr = document.getElementById("tabelaRegistos");
-  if (tr) {
-    tr.innerHTML =
-      state.entradas
-        .map(
-          (r) =>
-            `<tr><td data-label="Data/Hora">${r.datahora}</td><td data-label="Evento">${r.evento}</td><td data-label="Nome"><b>${r.nome}</b></td><td data-label="Função">${r.funcao}</td><td data-label="Validado por">${r.operador}</td><td data-label="Ações"><div class="actions-cell">${r.id ? `<button class="btn-danger" onclick="deleteRegisto('${r.id}')">Eliminar</button>` : ""}</div></td></tr>`
-        )
-        .join("") || "<tr><td colspan='6'>Sem entradas registadas.</td></tr>";
-  }
+  renderRegistos();
   const selFoto = document.getElementById("selectFotoPessoa");
   if (selFoto) {
     const oldFoto = selFoto.value;
