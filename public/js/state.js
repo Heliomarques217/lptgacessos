@@ -10,9 +10,11 @@ export const state = {
   qrScanner: null,
   qrScannerAtivo: false,
   qrScanHandled: false,
-  pessoasTable: { sort: "nome", dir: "asc", page: 1, pageSize: 20 },
+  pessoasTable: { sort: "nome", dir: "asc", page: 1, pageSize: 20, nome: "", funcao: "", estado: "" },
   entradasTable: { page: 1, pageSize: 20 },
   auditoriaTable: { page: 1, pageSize: 20, utilizador: "", acao: "" },
   auditoria: [],
   auditoriaError: null,
+  auditoriaLoaded: false,
+  dashboardStats: { pessoas: 0, ativos: 0, entradas: 0, hoje: 0 },
 };

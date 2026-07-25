@@ -20,9 +20,34 @@ export const FUNCOES_PADRAO = [
   "Jockey/Driver / Proprietário/a / Treinador/a",
 ];
 
+function normalizeFuncaoNome(nome) {
+  return String(nome || "").trim().toLowerCase();
+}
+
+function isSameFuncao(a, b) {
+  return normalizeFuncaoNome(a) === normalizeFuncaoNome(b);
+}
+
+function isInPadrao(nome) {
+  return FUNCOES_PADRAO.some((p) => isSameFuncao(p, nome));
+}
+
+export function dedupeFuncoesNomes(names) {
+  const seen = new Set();
+  const out = [];
+  for (const nome of names || []) {
+    const key = normalizeFuncaoNome(nome);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    const canonical = FUNCOES_PADRAO.find((p) => isSameFuncao(p, nome)) || nome;
+    out.push(canonical);
+  }
+  return out;
+}
+
 function mergeWithPadrao(dbNames) {
-  const extraInDb = (dbNames || []).filter((n) => !FUNCOES_PADRAO.includes(n));
-  return [...FUNCOES_PADRAO, ...extraInDb];
+  const extraInDb = (dbNames || []).filter((n) => !isInPadrao(n));
+  return dedupeFuncoesNomes([...FUNCOES_PADRAO, ...extraInDb]);
 }
 
 /** Admin: insere na tabela funcoes categorias do código que ainda não existem na BD. */
@@ -32,8 +57,10 @@ export async function syncMissingFuncoesFromPadrao() {
     console.warn("Sync funções:", error.message);
     return;
   }
-  const have = new Set((rows || []).map((r) => r.nome));
-  const missing = FUNCOES_PADRAO.map((nome, i) => ({ nome, ordem: i + 1 })).filter((x) => !have.has(x.nome));
+  const have = new Set((rows || []).map((r) => normalizeFuncaoNome(r.nome)));
+  const missing = FUNCOES_PADRAO.map((nome, i) => ({ nome, ordem: i + 1 })).filter(
+    (x) => !have.has(normalizeFuncaoNome(x.nome))
+  );
   if (!missing.length) return;
 
   for (const { nome, ordem: targetOrdem } of missing) {
@@ -79,5 +106,5 @@ export async function ensureFuncoes(options = {}) {
   } catch (e) {
     console.warn("Não foi possível ler funções do Supabase:", e);
   }
-  return [...FUNCOES_PADRAO];
+  return dedupeFuncoesNomes([...FUNCOES_PADRAO]);
 }

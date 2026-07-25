@@ -1,4 +1,5 @@
 export function mapPessoa(row) {
+  const fotoCartao = row.foto_cartao || row.fotoCartao || "";
   return {
     id: row.id,
     nome: row.nome,
@@ -6,7 +7,8 @@ export function mapPessoa(row) {
     numero: row.numero,
     codigo: row.codigo,
     ativo: row.ativo,
-    fotoCartao: row.foto_cartao || row.fotoCartao || "",
+    fotoCartao,
+    temFoto: Boolean(fotoCartao),
   };
 }
 

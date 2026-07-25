@@ -6,6 +6,8 @@ export function clearSensitiveState() {
   state.administradores = [];
   state.auditoria = [];
   state.auditoriaError = null;
+  state.auditoriaLoaded = false;
+  state.dashboardStats = { pessoas: 0, ativos: 0, entradas: 0, hoje: 0 };
   state.fotoTemporaria = null;
   state.qrPessoaAtual = null;
 }

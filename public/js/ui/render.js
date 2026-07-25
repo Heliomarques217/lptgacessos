@@ -189,12 +189,64 @@ function comparePessoas(a, b, field) {
   return 0;
 }
 
+function getFilteredPessoas() {
+  const { nome, funcao, estado } = state.pessoasTable;
+  let list = state.pessoas || [];
+  if (nome) {
+    const q = nome.trim().toLowerCase();
+    list = list.filter((p) => String(p.nome || "").toLowerCase().includes(q));
+  }
+  if (funcao) {
+    list = list.filter((p) => p.funcao === funcao);
+  }
+  if (estado === "ativo") {
+    list = list.filter((p) => p.ativo);
+  } else if (estado === "concluido") {
+    list = list.filter((p) => !p.ativo);
+  }
+  return list;
+}
+
 function getSortedPessoas() {
   const { sort, dir } = state.pessoasTable;
-  const list = [...state.pessoas];
+  const list = getFilteredPessoas();
   const mul = dir === "asc" ? 1 : -1;
   list.sort((a, b) => comparePessoas(a, b, sort) * mul);
   return list;
+}
+
+export function getPessoasTotalPages() {
+  const { pageSize } = state.pessoasTable;
+  return Math.max(1, Math.ceil(getFilteredPessoas().length / pageSize));
+}
+
+function syncPessoasFuncaoFilter() {
+  const sel = document.getElementById("pessoasFuncaoFilter");
+  if (!sel) return;
+  const list = state.funcoes?.length ? state.funcoes : FUNCOES_PADRAO;
+  const signature = list.join("|");
+  if (sel.dataset.funcoes !== signature) {
+    const options = list.map((f) => `<option value="${f}">${f}</option>`).join("");
+    sel.innerHTML = `<option value="">Todas as funções</option>${options}`;
+    sel.dataset.funcoes = signature;
+  }
+  if (sel.value !== state.pessoasTable.funcao) {
+    sel.value = state.pessoasTable.funcao;
+  }
+}
+
+function syncPessoasEstadoFilter() {
+  const sel = document.getElementById("pessoasEstadoFilter");
+  if (sel && sel.value !== state.pessoasTable.estado) {
+    sel.value = state.pessoasTable.estado;
+  }
+}
+
+function syncPessoasNomeSearch() {
+  const input = document.getElementById("pessoasNomeSearch");
+  if (input && input.value !== state.pessoasTable.nome) {
+    input.value = state.pessoasTable.nome;
+  }
 }
 
 function funcoesOptionsHtml(current) {
@@ -209,10 +261,14 @@ export function renderPessoas() {
   const tp = document.getElementById("tabelaPessoas");
   if (!tp) return;
 
+  syncPessoasFuncaoFilter();
+  syncPessoasEstadoFilter();
+  syncPessoasNomeSearch();
+
   const sorted = getSortedPessoas();
   const { pageSize } = state.pessoasTable;
   const total = sorted.length;
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const totalPages = getPessoasTotalPages();
   let page = state.pessoasTable.page;
   if (page > totalPages) page = totalPages;
   if (page < 1) page = 1;
@@ -227,7 +283,8 @@ export function renderPessoas() {
         (p) =>
           `<tr><td data-label="Nome" title="${p.nome}"><b>${p.nome}</b></td><td data-label="Função"><select class="funcao-select" title="${p.funcao}" onchange="updatePersonFuncao('${p.id}', this)">${funcoesOptionsHtml(p.funcao)}</select></td><td data-label="Nº">${p.numero}</td><td data-label="Código QR" title="${p.codigo}">${p.codigo}</td><td data-label="Estado"><span class="badge ${p.ativo ? "" : "off"}">${p.ativo ? "Ativo" : "Concluído"}</span></td><td data-label="QR" class="td-qr"><button type="button" class="btn-sm btn-qr" onclick="viewQRCode('${p.id}')">Ver QR</button></td><td data-label="Ações"><div class="actions-cell actions-cell--compact"><button type="button" class="btn-sm btn-renew" onclick="openRenewCardModal('${p.id}')">Novo cartão</button><button type="button" class="btn-sm ${p.ativo ? "btn-warn" : "btn-safe"}" onclick="toggleStatus('${p.id}')">${p.ativo ? "Concluir" : "Reativar"}</button><button type="button" class="btn-sm btn-danger" onclick="deletePerson('${p.id}')">Apagar</button></div></td></tr>`
       )
-      .join("") || `<tr><td colspan="7">Sem pessoas.</td></tr>`;
+      .join("") ||
+    `<tr><td colspan="7">${state.pessoas.length ? "Nenhuma pessoa encontrada." : "Sem pessoas."}</td></tr>`;
 
   const sortLabels = { nome: "Nome", funcao: "Função", numero: "Nº", codigo: "Código QR", ativo: "Estado" };
   const arrow = state.pessoasTable.dir === "asc" ? "▲" : "▼";
@@ -242,7 +299,7 @@ export function renderPessoas() {
   const info = document.getElementById("pessoasPageInfo");
   if (info) {
     if (!total) {
-      info.textContent = "Nenhuma pessoa registada";
+      info.textContent = state.pessoas.length ? "Nenhuma pessoa encontrada" : "Nenhuma pessoa registada";
     } else {
       const from = start + 1;
       const to = Math.min(start + pageSize, total);
@@ -376,7 +433,7 @@ export function renderAuditoria() {
 }
 
 function pessoaTemFotoCartao(p) {
-  return Boolean(p.fotoCartao && String(p.fotoCartao).trim());
+  return Boolean(p.temFoto || (p.fotoCartao && String(p.fotoCartao).trim()));
 }
 
 function buildFotoPessoaSelectHtml() {
@@ -455,31 +512,55 @@ export function syncFotoPessoaSelectStyle() {
   sel.classList.add(pessoaTemFotoCartao(p) ? "select-foto--com" : "select-foto--sem");
 }
 
-export function render(showPersonPhotoFn) {
-  renderPessoas();
-  renderFuncoesSelect();
-  renderRegistos();
-  const selFoto = document.getElementById("selectFotoPessoa");
-  if (selFoto) {
-    const oldFoto = selFoto.value;
-    selFoto.innerHTML = buildFotoPessoaSelectHtml();
-    selFoto.value =
-      oldFoto !== "" && state.pessoas[Number(oldFoto)] !== undefined ? oldFoto : "";
-    syncFotoPessoaSelectStyle();
-    if (showPersonPhotoFn) showPersonPhotoFn();
-  }
+export function syncDashboardStatsFromState() {
   const hoje = new Date().toLocaleDateString("pt-PT");
+  state.dashboardStats = {
+    pessoas: state.pessoas.length,
+    ativos: state.pessoas.filter((p) => p.ativo).length,
+    entradas: state.entradas.length,
+    hoje: state.entradas.filter((r) => String(r.datahora).startsWith(hoje)).length,
+  };
+}
+
+export function renderDashboard() {
   if (document.getElementById("statPessoas")) {
-    document.getElementById("statPessoas").textContent = state.pessoas.length;
-    document.getElementById("statAtivos").textContent = state.pessoas.filter((p) => p.ativo).length;
-    document.getElementById("statEntradas").textContent = state.entradas.length;
-    document.getElementById("statHoje").textContent = state.entradas.filter((r) =>
-      String(r.datahora).startsWith(hoje)
-    ).length;
+    const stats = state.dashboardStats || {};
+    document.getElementById("statPessoas").textContent = stats.pessoas ?? 0;
+    document.getElementById("statAtivos").textContent = stats.ativos ?? 0;
+    document.getElementById("statEntradas").textContent = stats.entradas ?? 0;
+    document.getElementById("statHoje").textContent = stats.hoje ?? 0;
   }
-  renderAuditoria();
-  renderAdmins();
-  renderCalendar();
   updateNextEvent();
   renderJornadasAnuladas();
+}
+
+function getVisiblePageId() {
+  return document.querySelector(".page.show")?.id || "dashboard";
+}
+
+export function render(showPersonPhotoFn) {
+  if (state.sessao && (state.pessoas.length || state.entradas.length)) {
+    syncDashboardStatsFromState();
+  }
+  const page = getVisiblePageId();
+  renderDashboard();
+
+  if (page === "pessoas" || page === "nova") renderFuncoesSelect();
+  if (page === "pessoas") renderPessoas();
+  if (page === "registos") renderRegistos();
+  if (page === "atividade") renderAuditoria();
+  if (page === "admins") renderAdmins();
+  if (page === "calendario") renderCalendar();
+
+  if (page === "fotos") {
+    const selFoto = document.getElementById("selectFotoPessoa");
+    if (selFoto) {
+      const oldFoto = selFoto.value;
+      selFoto.innerHTML = buildFotoPessoaSelectHtml();
+      selFoto.value =
+        oldFoto !== "" && state.pessoas[Number(oldFoto)] !== undefined ? oldFoto : "";
+      syncFotoPessoaSelectStyle();
+      if (showPersonPhotoFn) showPersonPhotoFn();
+    }
+  }
 }

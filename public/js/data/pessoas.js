@@ -4,10 +4,30 @@ import { mapPessoa } from "./mappers.js";
 export async function fetchPessoas() {
   const { data, error } = await supabase
     .from("pessoas")
-    .select("*")
+    .select("id, nome, funcao, numero, codigo, ativo")
     .order("nome", { ascending: true });
   if (error) throw error;
   return (data || []).map(mapPessoa);
+}
+
+export async function fetchPessoasComFotoIds() {
+  const { data, error } = await supabase.from("pessoas").select("id").not("foto_cartao", "is", null);
+  if (error) throw error;
+  return new Set((data || []).map((row) => row.id));
+}
+
+export async function fetchPessoaFoto(id) {
+  const { data, error } = await supabase.from("pessoas").select("foto_cartao").eq("id", id).single();
+  if (error) throw error;
+  return data?.foto_cartao || "";
+}
+
+export function attachTemFoto(pessoas, comFotoIds) {
+  return pessoas.map((p) => ({
+    ...p,
+    temFoto: comFotoIds.has(p.id),
+    fotoCartao: p.fotoCartao || "",
+  }));
 }
 
 export async function insertPessoa(pessoa) {

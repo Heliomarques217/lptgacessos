@@ -1,8 +1,8 @@
-import { isConfigured } from "./supabase.js";
+import { isConfigured, supabase } from "./supabase.js";
 import { state } from "./state.js";
-import { fetchPessoas, insertPessoa, updatePessoa, deletePessoa as removePessoa } from "./data/pessoas.js";
+import { fetchPessoas, attachTemFoto, fetchPessoasComFotoIds, fetchPessoaFoto, insertPessoa, updatePessoa, deletePessoa as removePessoa } from "./data/pessoas.js";
 import { ensureCalendarioOficial } from "./data/jornadas.js";
-import { fetchEntradas, insertEntrada, findEntrada, deleteEntrada, deleteAllEntradas } from "./data/entradas.js";
+import { fetchEntradas, fetchEntradasStats, insertEntrada, findEntrada, deleteEntrada, deleteAllEntradas } from "./data/entradas.js";
 import {
   fetchAdministradores,
   insertAdministrador,
@@ -22,6 +22,10 @@ import {
   onValidarEventoChange,
   getAuditoriaTotalPages,
   getEntradasTotalPages,
+  getPessoasTotalPages,
+  renderAuditoria,
+  renderDashboard,
+  syncDashboardStatsFromState,
 } from "./ui/render.js";
 
 function uid() {
@@ -42,46 +46,87 @@ async function loadAllData() {
     alert("Configura SUPABASE_URL e SUPABASE_ANON_KEY em public/js/config.js");
     return;
   }
-  state.jornadas = await ensureCalendarioOficial();
+
+  const admin = isAdmin();
   try {
-    state.pessoas = await fetchPessoas();
-    state.administradores = await fetchAdministradores();
-    state.entradas = await fetchEntradas();
-    state.funcoes = await ensureFuncoes({ syncMissing: isAdmin() });
-    if (isAdmin()) {
-      try {
-        state.auditoria = await fetchAuditoria();
-        state.auditoriaError = null;
-      } catch (e) {
-        console.warn("Auditoria:", e);
-        state.auditoria = [];
-        state.auditoriaError = e.message || String(e);
-      }
-    } else {
-      state.auditoria = [];
-      state.auditoriaError = null;
-    }
+    const [jornadas, pessoas, comFotoIds, funcoes, administradores, entradas, entradasStats] =
+      await Promise.all([
+        ensureCalendarioOficial(),
+        fetchPessoas(),
+        fetchPessoasComFotoIds(),
+        ensureFuncoes({ syncMissing: admin }),
+        fetchAdministradores(),
+        fetchEntradas(),
+        fetchEntradasStats(),
+      ]);
+
+    state.jornadas = jornadas;
+    state.pessoas = attachTemFoto(pessoas, comFotoIds);
+    state.funcoes = funcoes;
+    state.administradores = administradores;
+    state.entradas = entradas;
+    syncDashboardStatsFromState();
+    state.dashboardStats.entradas = entradasStats.total;
+    state.dashboardStats.hoje = entradasStats.hoje;
   } catch (e) {
     console.error(e);
     throw e;
   }
+
   populateEvents();
-  render(showPersonPhoto);
+  renderDashboard();
+
+  if (admin) {
+    loadAuditoriaInBackground();
+  } else {
+    state.auditoria = [];
+    state.auditoriaError = null;
+    state.auditoriaLoaded = false;
+  }
+}
+
+async function loadAuditoriaInBackground() {
+  try {
+    state.auditoria = await fetchAuditoria();
+    state.auditoriaError = null;
+    state.auditoriaLoaded = true;
+    if (document.getElementById("atividade")?.classList.contains("show")) {
+      renderAuditoria();
+    }
+  } catch (e) {
+    console.warn("Auditoria:", e);
+    state.auditoria = [];
+    state.auditoriaError = e.message || String(e);
+    state.auditoriaLoaded = false;
+  }
+}
+
+async function ensureAuditoriaLoaded() {
+  if (!isAdmin() || state.auditoriaLoaded) return;
+  await loadAuditoriaInBackground();
 }
 
 export async function refreshAllFromSupabase() {
   if (!state.sessao) return;
   if (state.fotoTemporaria) return;
+  const now = Date.now();
+  if (lastFullLoadAt && now - lastFullLoadAt < FULL_RELOAD_MIN_MS) {
+    if (isDashboardVisible()) await refreshDashboardStats();
+    return;
+  }
   try {
     await loadAllData();
+    lastFullLoadAt = Date.now();
   } catch (e) {
     console.error(e);
   }
 }
 
-const DASHBOARD_REFRESH_MS = 5000;
+const DASHBOARD_REFRESH_MS = 30000;
+const FULL_RELOAD_MIN_MS = 60000;
 let dashboardRefreshTimer = null;
 let dashboardRefreshInFlight = false;
+let lastFullLoadAt = 0;
 
 function isDashboardVisible() {
   return document.getElementById("dashboard")?.classList.contains("show") ?? false;
@@ -94,12 +139,34 @@ function clearDashboardRefreshTimer() {
   }
 }
 
+async function refreshDashboardStats() {
+  if (!state.sessao || !isDashboardVisible()) return;
+  try {
+    const [pessoasRes, ativosRes, entradasStats] = await Promise.all([
+      supabase.from("pessoas").select("*", { count: "exact", head: true }),
+      supabase.from("pessoas").select("*", { count: "exact", head: true }).eq("ativo", true),
+      fetchEntradasStats(),
+    ]);
+    if (pessoasRes.error) throw pessoasRes.error;
+    if (ativosRes.error) throw ativosRes.error;
+    state.dashboardStats = {
+      pessoas: pessoasRes.count || 0,
+      ativos: ativosRes.count || 0,
+      entradas: entradasStats.total,
+      hoje: entradasStats.hoje,
+    };
+    renderDashboard();
+  } catch (e) {
+    console.warn("Refresh dashboard:", e);
+  }
+}
+
 async function tickDashboardRefresh() {
   if (document.hidden || !state.sessao || !isDashboardVisible()) return;
   if (dashboardRefreshInFlight) return;
   dashboardRefreshInFlight = true;
   try {
-    await refreshAllFromSupabase();
+    await refreshDashboardStats();
   } finally {
     dashboardRefreshInFlight = false;
   }
@@ -131,6 +198,7 @@ async function login() {
       }
     }
     await loadAllData();
+    lastFullLoadAt = Date.now();
     render(showPersonPhoto);
     scheduleDashboardRefresh();
   } catch (e) {
@@ -193,7 +261,8 @@ function screen(id, btn) {
   btn.classList.add("active");
   closeMobileMenu();
   if (id === "fotos") resetFotoTab();
-  render(showPersonPhoto);
+  if (id === "atividade") ensureAuditoriaLoaded().then(() => render(showPersonPhoto));
+  else render(showPersonPhoto);
   if (id === "dashboard") scheduleDashboardRefresh();
   else clearDashboardRefreshTimer();
 }
@@ -217,11 +286,29 @@ function pessoasPrevPage() {
 }
 
 function pessoasNextPage() {
-  const totalPages = Math.max(1, Math.ceil(state.pessoas.length / state.pessoasTable.pageSize));
-  if (state.pessoasTable.page < totalPages) {
+  if (state.pessoasTable.page < getPessoasTotalPages()) {
     state.pessoasTable.page += 1;
     render(showPersonPhoto);
   }
+}
+
+function searchPessoasNome() {
+  const input = document.getElementById("pessoasNomeSearch");
+  state.pessoasTable.nome = input?.value?.trim() || "";
+  state.pessoasTable.page = 1;
+  render(showPersonPhoto);
+}
+
+function filterPessoasFuncao(value) {
+  state.pessoasTable.funcao = value;
+  state.pessoasTable.page = 1;
+  render(showPersonPhoto);
+}
+
+function filterPessoasEstado(value) {
+  state.pessoasTable.estado = value;
+  state.pessoasTable.page = 1;
+  render(showPersonPhoto);
 }
 
 function filterAuditoriaUtilizador(value) {
@@ -413,13 +500,18 @@ async function confirmRenewCard() {
       Object.assign(old, concluded);
     }
 
+    let fotoCartao = old.fotoCartao;
+    if (!fotoCartao && old.temFoto) {
+      fotoCartao = await fetchPessoaFoto(old.id);
+    }
+
     const novaPessoa = await insertPessoa({
       nome: old.nome,
       funcao: novaFuncao,
       numero: old.numero,
       codigo: generateUniqueCode(),
       ativo: true,
-      fotoCartao: old.fotoCartao || undefined,
+      fotoCartao: fotoCartao || undefined,
     });
     state.pessoas.push(novaPessoa);
     logAtividade(
@@ -627,18 +719,41 @@ function showPersonPhoto(resetPreview = false) {
   const p = state.pessoas[Number(sel.value)];
   if (!p) return;
 
+  const renderPhoto = (src, semFoto) => {
+    if (src) {
+      box.innerHTML = `<img src="${src}" alt="Foto do cartão">`;
+      box.classList.remove("foto-preview--sem");
+    } else {
+      box.innerHTML = "<span>Sem foto associada</span>";
+      box.classList.toggle("foto-preview--sem", semFoto);
+    }
+    if (info) info.textContent = `${p.nome} · ${p.funcao} · ${p.codigo}`;
+    syncFotoPessoaSelectStyle();
+  };
+
   if (state.fotoTemporaria) {
-    box.innerHTML = `<img src="${state.fotoTemporaria}" alt="Foto do cartão">`;
-    box.classList.remove("foto-preview--sem");
-  } else if (p.fotoCartao) {
-    box.innerHTML = `<img src="${p.fotoCartao}" alt="Foto do cartão">`;
-    box.classList.remove("foto-preview--sem");
-  } else {
-    box.innerHTML = "<span>Sem foto associada</span>";
-    box.classList.add("foto-preview--sem");
+    renderPhoto(state.fotoTemporaria, false);
+    return;
   }
-  info.textContent = `${p.nome} · ${p.funcao} · ${p.codigo}`;
-  syncFotoPessoaSelectStyle();
+
+  if (p.fotoCartao) {
+    renderPhoto(p.fotoCartao, false);
+    return;
+  }
+
+  if (p.temFoto) {
+    box.innerHTML = "<span>A carregar foto…</span>";
+    fetchPessoaFoto(p.id)
+      .then((foto) => {
+        p.fotoCartao = foto;
+        if (state.pessoas[Number(sel.value)]?.id !== p.id) return;
+        renderPhoto(foto, !foto);
+      })
+      .catch(() => renderPhoto("", true));
+    return;
+  }
+
+  renderPhoto("", true);
 }
 
 async function saveCardPhoto() {
@@ -655,6 +770,7 @@ async function saveCardPhoto() {
   try {
     const updated = await updatePessoa(p.id, { fotoCartao: state.fotoTemporaria });
     Object.assign(p, updated);
+    p.temFoto = Boolean(updated.fotoCartao);
     state.fotoTemporaria = null;
     render(showPersonPhoto);
     alert("Foto associada a: " + p.nome);
@@ -678,6 +794,8 @@ async function removeCardPhoto() {
   try {
     const updated = await updatePessoa(p.id, { fotoCartao: "" });
     Object.assign(p, updated);
+    p.temFoto = false;
+    p.fotoCartao = "";
     state.fotoTemporaria = null;
     render(showPersonPhoto);
   } catch (e) {
@@ -1003,6 +1121,9 @@ Object.assign(window, {
   sortPessoas,
   pessoasPrevPage,
   pessoasNextPage,
+  searchPessoasNome,
+  filterPessoasFuncao,
+  filterPessoasEstado,
   filterAuditoriaUtilizador,
   filterAuditoriaAcao,
   auditoriaPrevPage,
@@ -1084,6 +1205,7 @@ async function init() {
     }
     try {
       await loadAllData();
+      lastFullLoadAt = Date.now();
     } catch (e) {
       console.error(e);
       alert("Erro ao carregar dados: " + e.message);

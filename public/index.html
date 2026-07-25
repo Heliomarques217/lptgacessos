@@ -153,6 +153,29 @@
         <div class="actions"><button onclick="exportDatabase()">Exportar Excel</button><label class="import">Importar BD<input type="file" accept=".json" onchange="importDatabase(event)"></label></div>
       </div>
       <div class="glass overflow">
+        <div class="audit-toolbar">
+          <label class="audit-filter">
+            <span>Nome</span>
+            <div class="search-row">
+              <input type="search" id="pessoasNomeSearch" placeholder="Pesquisar pelo nome..." onkeydown="if(event.key==='Enter')searchPessoasNome()">
+              <button type="button" onclick="searchPessoasNome()">Pesquisar</button>
+            </div>
+          </label>
+          <label class="audit-filter">
+            <span>Função</span>
+            <select id="pessoasFuncaoFilter" onchange="filterPessoasFuncao(this.value)">
+              <option value="">Todas as funções</option>
+            </select>
+          </label>
+          <label class="audit-filter">
+            <span>Estado</span>
+            <select id="pessoasEstadoFilter" onchange="filterPessoasEstado(this.value)">
+              <option value="">Todos</option>
+              <option value="ativo">Ativo</option>
+              <option value="concluido">Concluído</option>
+            </select>
+          </label>
+        </div>
         <table class="pessoas-table">
           <thead>
             <tr>

@@ -1,6 +1,36 @@
 import { supabase } from "../supabase.js";
 import { mapEntrada } from "./mappers.js";
 
+function startOfTodayIso() {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d.toISOString();
+}
+
+function startOfTomorrowIso() {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() + 1);
+  return d.toISOString();
+}
+
+export async function fetchEntradasStats() {
+  const [totalRes, hojeRes] = await Promise.all([
+    supabase.from("entradas").select("*", { count: "exact", head: true }),
+    supabase
+      .from("entradas")
+      .select("*", { count: "exact", head: true })
+      .gte("datahora", startOfTodayIso())
+      .lt("datahora", startOfTomorrowIso()),
+  ]);
+  if (totalRes.error) throw totalRes.error;
+  if (hojeRes.error) throw hojeRes.error;
+  return {
+    total: totalRes.count || 0,
+    hoje: hojeRes.count || 0,
+  };
+}
+
 export async function fetchEntradas() {
   const { data, error } = await supabase
     .from("entradas")
