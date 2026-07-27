@@ -20,7 +20,13 @@ export function getCalendarioLocal() {
 
 function mergeWithCalendarioLocal(existing) {
   const merged = new Map(getCalendarioLocal().map((j) => [j.jornada, j]));
-  for (const j of existing) merged.set(j.jornada, j);
+  for (const j of existing) {
+    const seed = merged.get(j.jornada);
+    merged.set(j.jornada, {
+      ...j,
+      anulada: Boolean(j.anulada || seed?.anulada),
+    });
+  }
   return [...merged.values()].sort((a, b) => a.data.localeCompare(b.data));
 }
 

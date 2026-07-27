@@ -9,7 +9,7 @@ export const CALENDARIO_LPTG_2026 = [
   { jornada: "Jornada 8", data: "2026-06-21", dataPT: "21-06-2026", hipodromo: "Hipódromo de Ponte da Barca", ordem: 8 },
   { jornada: "Jornada 9", data: "2026-07-12", dataPT: "12-07-2026", hipodromo: "Hipódromo de Ponte de Lima", ordem: 9 },
   { jornada: "Jornada 10", data: "2026-07-26", dataPT: "26-07-2026", hipodromo: "Hipódromo da Maia", ordem: 10 },
-  { jornada: "Jornada 11", data: "2026-08-01", dataPT: "01-08-2026", hipodromo: "Hipódromo de Rio Frio", ordem: 11 },
+  { jornada: "Jornada 11", data: "2026-08-01", dataPT: "01-08-2026", hipodromo: "Hipódromo de Rio Frio", ordem: 11, anulada: true },
   { jornada: "Jornada 12", data: "2026-08-19", dataPT: "19-08-2026", hipodromo: "Hipódromo de Ponte da Barca", ordem: 12 },
   { jornada: "Jornada 13", data: "2026-08-30", dataPT: "30-08-2026", hipodromo: "Hipódromo de Celorico de Basto", ordem: 13 },
   { jornada: "Jornada 14", data: "2026-09-20", dataPT: "20-09-2026", hipodromo: "Hipódromo da Maia", ordem: 14 },
