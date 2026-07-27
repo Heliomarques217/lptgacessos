@@ -16,17 +16,18 @@ INSERT INTO public.funcoes (nome, ordem) VALUES
   ('Segundo secretário', 4),
   ('Tesoureiro/a', 5),
   ('Staff', 6),
-  ('Fotógrafo Oficial', 7),
-  ('Veterinário/a', 8),
-  ('Jockey/Driver', 9),
-  ('Jockey Aprendiz', 10),
-  ('Proprietário/a', 11),
-  ('Treinador/a', 12),
-  ('Sócio/a', 13),
-  ('Jockey/Driver / Proprietário/a', 14),
-  ('Jockey/Driver / Treinador/a', 15),
-  ('Proprietário/a / Treinador/a', 16),
-  ('Jockey/Driver / Proprietário/a / Treinador/a', 17)
+  ('Assistente de Corridas', 7),
+  ('Fotógrafo Oficial', 8),
+  ('Veterinário/a', 9),
+  ('Jockey/Driver', 10),
+  ('Jockey Aprendiz', 11),
+  ('Proprietário/a', 12),
+  ('Treinador/a', 13),
+  ('Sócio/a', 14),
+  ('Jockey/Driver / Proprietário/a', 15),
+  ('Jockey/Driver / Treinador/a', 16),
+  ('Proprietário/a / Treinador/a', 17),
+  ('Jockey/Driver / Proprietário/a / Treinador/a', 18)
 ON CONFLICT (nome) DO NOTHING;
 
 ALTER TABLE public.funcoes ENABLE ROW LEVEL SECURITY;
