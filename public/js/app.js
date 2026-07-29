@@ -680,16 +680,54 @@ function copyNewCode() {
   navigator.clipboard.writeText(input.value).then(() => alert("Código copiado: " + input.value));
 }
 
-function previewCardPhoto(event) {
+const FOTO_CARTAO_MAX_PX = 1200;
+const FOTO_CARTAO_JPEG_QUALITY = 0.82;
+
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error("Não foi possível ler o ficheiro."));
+    reader.readAsDataURL(file);
+  });
+}
+
+function compressCardPhotoDataUrl(dataUrl, maxPx = FOTO_CARTAO_MAX_PX, quality = FOTO_CARTAO_JPEG_QUALITY) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, maxPx / Math.max(img.width, img.height));
+      const w = Math.max(1, Math.round(img.width * scale));
+      const h = Math.max(1, Math.round(img.height * scale));
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL("image/jpeg", quality));
+    };
+    img.onerror = () => reject(new Error("Não foi possível processar a imagem."));
+    img.src = dataUrl;
+  });
+}
+
+async function prepareCardPhotoFromFile(file) {
+  const dataUrl = await readFileAsDataUrl(file);
+  return compressCardPhotoDataUrl(dataUrl);
+}
+
+async function previewCardPhoto(event) {
   const file = event.target.files[0];
   if (!file) return;
-  const reader = new FileReader();
-  reader.onload = () => {
-    state.fotoTemporaria = reader.result;
-    const box = document.getElementById("fotoPreview");
+  const box = document.getElementById("fotoPreview");
+  try {
+    if (box) box.innerHTML = "<span>A preparar foto…</span>";
+    state.fotoTemporaria = await prepareCardPhotoFromFile(file);
     if (box) box.innerHTML = `<img src="${state.fotoTemporaria}" alt="Foto do cartão">`;
-  };
-  reader.readAsDataURL(file);
+  } catch (e) {
+    state.fotoTemporaria = null;
+    if (box) box.innerHTML = "<span>Sem foto associada</span>";
+    alert("Erro ao preparar foto: " + e.message);
+  }
 }
 
 function showPersonPhoto(resetPreview = false) {
@@ -746,10 +784,14 @@ function showPersonPhoto(resetPreview = false) {
     fetchPessoaFoto(p.id)
       .then((foto) => {
         p.fotoCartao = foto;
+        p.temFoto = Boolean(foto);
         if (state.pessoas[Number(sel.value)]?.id !== p.id) return;
         renderPhoto(foto, !foto);
       })
-      .catch(() => renderPhoto("", true));
+      .catch((e) => {
+        console.error("Erro ao carregar foto:", e);
+        renderPhoto("", true);
+      });
     return;
   }
 
@@ -767,10 +809,15 @@ async function saveCardPhoto() {
     return;
   }
   const p = state.pessoas[Number(sel.value)];
+  const fotoSalva = state.fotoTemporaria;
   try {
-    const updated = await updatePessoa(p.id, { fotoCartao: state.fotoTemporaria });
-    Object.assign(p, updated);
-    p.temFoto = Boolean(updated.fotoCartao);
+    await updatePessoa(p.id, { fotoCartao: fotoSalva });
+    const confirmada = await fetchPessoaFoto(p.id);
+    if (!confirmada) {
+      throw new Error("A foto não ficou guardada na base de dados. Tenta outra vez.");
+    }
+    p.fotoCartao = confirmada;
+    p.temFoto = true;
     state.fotoTemporaria = null;
     render(showPersonPhoto);
     alert("Foto associada a: " + p.nome);
@@ -786,14 +833,13 @@ async function removeCardPhoto() {
     return;
   }
   const p = state.pessoas[Number(sel.value)];
-  if (!p.fotoCartao) {
+  if (!p.fotoCartao && !p.temFoto) {
     alert("Esta pessoa ainda não tem foto associada.");
     return;
   }
   if (!confirm("Remover a foto associada a " + p.nome + "?")) return;
   try {
-    const updated = await updatePessoa(p.id, { fotoCartao: "" });
-    Object.assign(p, updated);
+    await updatePessoa(p.id, { fotoCartao: "" });
     p.temFoto = false;
     p.fotoCartao = "";
     state.fotoTemporaria = null;

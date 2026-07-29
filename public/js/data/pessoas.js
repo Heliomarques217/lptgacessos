@@ -11,7 +11,11 @@ export async function fetchPessoas() {
 }
 
 export async function fetchPessoasComFotoIds() {
-  const { data, error } = await supabase.from("pessoas").select("id").not("foto_cartao", "is", null);
+  const { data, error } = await supabase
+    .from("pessoas")
+    .select("id")
+    .not("foto_cartao", "is", null)
+    .neq("foto_cartao", "");
   if (error) throw error;
   return new Set((data || []).map((row) => row.id));
 }
@@ -49,6 +53,19 @@ export async function updatePessoa(id, patch) {
   if (patch.ativo !== undefined) row.ativo = patch.ativo;
   if (patch.funcao !== undefined) row.funcao = patch.funcao;
   if (patch.fotoCartao !== undefined) row.foto_cartao = patch.fotoCartao || null;
+
+  if (patch.fotoCartao !== undefined) {
+    const { error } = await supabase.from("pessoas").update(row).eq("id", id);
+    if (error) throw error;
+    const { data, error: fetchError } = await supabase
+      .from("pessoas")
+      .select("id, nome, funcao, numero, codigo, ativo")
+      .eq("id", id)
+      .single();
+    if (fetchError) throw fetchError;
+    return mapPessoa({ ...data, foto_cartao: patch.fotoCartao || "" });
+  }
+
   const { data, error } = await supabase.from("pessoas").update(row).eq("id", id).select("*").single();
   if (error) throw error;
   return mapPessoa(data);

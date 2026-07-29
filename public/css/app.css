@@ -525,11 +525,14 @@ button.btn-sm.btn-safe{
   margin-top:8px;
 }
 
-/* Fotos de cartão: sem foto = vermelho suave (select fechado + opções onde o browser permite) */
+/* Fotos de cartão: sem foto = destaque suave (só borda/fundo no campo fechado) */
 #selectFotoPessoa.select-foto--sem{
   background:#fff5f5;
   border-color:rgba(185,28,28,.32);
-  color:#9f1239;
+}
+#selectFotoPessoa option.foto-opt--com{
+  background:#fff;
+  color:var(--text);
 }
 #selectFotoPessoa option.foto-opt--sem{
   background:#fff5f5;
