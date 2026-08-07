@@ -339,6 +339,22 @@
 </main>
 
 
+<div class="qr-modal" id="editNomeModal">
+  <div class="qr-modal-card qr-modal-card--form">
+    <button type="button" class="qr-modal-close" onclick="closeEditNomeModal()">×</button>
+    <span class="eyebrow">Base de dados</span>
+    <h3>Editar nome</h3>
+    <p id="editNomeHint">Altera o nome registado desta pessoa na base de dados.</p>
+    <label for="editNomeInput">Nome completo</label>
+    <input type="text" id="editNomeInput" autocomplete="name" onkeydown="if(event.key==='Enter'){event.preventDefault();confirmEditPersonNome()}">
+    <p class="modal-error" id="editNomeError" hidden></p>
+    <div class="modal-actions modal-actions--row">
+      <button type="button" onclick="closeEditNomeModal()">Cancelar</button>
+      <button type="button" class="primary" onclick="confirmEditPersonNome()">Guardar</button>
+    </div>
+  </div>
+</div>
+
 <div class="qr-modal" id="renewCardModal">
   <div class="qr-modal-card">
     <button type="button" class="qr-modal-close" onclick="closeRenewCardModal()">×</button>

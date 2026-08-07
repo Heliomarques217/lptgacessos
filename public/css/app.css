@@ -665,6 +665,25 @@ button.btn-edit-nome{
 .modal-actions button{
   width:100%;
 }
+.qr-modal-card--form{
+  text-align:left;
+}
+.qr-modal-card--form h3{
+  text-align:left;
+}
+.qr-modal-card--form p{
+  text-align:left;
+}
+.modal-actions--row{
+  grid-template-columns:1fr 1fr;
+  margin-top:20px;
+}
+.modal-error{
+  color:#b91c1c;
+  font-size:13px;
+  font-weight:800;
+  margin:10px 0 0;
+}
 
 
 .login-gate{

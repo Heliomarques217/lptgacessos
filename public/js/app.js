@@ -450,25 +450,77 @@ async function editPersonNome(id) {
   }
   const p = state.pessoas.find((x) => x.id === id);
   if (!p) return;
-  const novo = prompt("Nome completo:", p.nome);
-  if (novo === null) return;
-  const nome = novo.trim();
-  if (!nome) {
-    alert("O nome não pode ficar vazio.");
+  const modal = document.getElementById("editNomeModal");
+  const input = document.getElementById("editNomeInput");
+  const err = document.getElementById("editNomeError");
+  if (!modal || !input) return;
+  editNomePersonId = id;
+  input.value = p.nome;
+  if (err) {
+    err.hidden = true;
+    err.textContent = "";
+  }
+  modal.classList.add("show");
+  setTimeout(() => {
+    input.focus();
+    input.select();
+  }, 0);
+}
+
+function closeEditNomeModal() {
+  editNomePersonId = null;
+  const modal = document.getElementById("editNomeModal");
+  const err = document.getElementById("editNomeError");
+  if (modal) modal.classList.remove("show");
+  if (err) {
+    err.hidden = true;
+    err.textContent = "";
+  }
+}
+
+async function confirmEditPersonNome() {
+  const id = editNomePersonId;
+  const input = document.getElementById("editNomeInput");
+  const err = document.getElementById("editNomeError");
+  if (!id || !input) return;
+  const p = state.pessoas.find((x) => x.id === id);
+  if (!p) {
+    closeEditNomeModal();
     return;
   }
-  if (nome === p.nome) return;
+  const nome = input.value.trim();
+  if (!nome) {
+    if (err) {
+      err.textContent = "O nome não pode ficar vazio.";
+      err.hidden = false;
+    }
+    input.focus();
+    return;
+  }
+  if (nome === p.nome) {
+    closeEditNomeModal();
+    return;
+  }
   const anterior = p.nome;
+  const saveBtn = document.querySelector("#editNomeModal .primary");
+  if (saveBtn) saveBtn.disabled = true;
   try {
     const updated = await updatePessoa(id, { nome });
     Object.assign(p, updated);
     logAtividade("pessoa_nome", `${anterior} → ${nome} · ${p.codigo}`);
+    closeEditNomeModal();
     render(showPersonPhoto);
   } catch (e) {
-    alert("Erro ao alterar nome: " + e.message);
+    if (err) {
+      err.textContent = "Erro ao alterar nome: " + e.message;
+      err.hidden = false;
+    }
+  } finally {
+    if (saveBtn) saveBtn.disabled = false;
   }
 }
 
+let editNomePersonId = null;
 let renewFromId = null;
 
 function openRenewCardModal(id) {
@@ -1207,6 +1259,8 @@ Object.assign(window, {
   toggleStatus,
   updatePersonFuncao,
   editPersonNome,
+  closeEditNomeModal,
+  confirmEditPersonNome,
   openRenewCardModal,
   closeRenewCardModal,
   confirmRenewCard,
