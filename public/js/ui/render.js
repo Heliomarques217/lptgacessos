@@ -3,6 +3,14 @@ import { formatEventText, isJornadaAtiva } from "../data/mappers.js";
 import { FUNCOES_PADRAO } from "../data/funcoes.js";
 import { ACAO_LABELS, labelAcao } from "../data/auditoria.js";
 
+function escapeHtml(text) {
+  return String(text)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 export function getNextEvent() {
   const hoje = new Date();
   hoje.setHours(0, 0, 0, 0);
@@ -281,7 +289,7 @@ export function renderPessoas() {
     slice
       .map(
         (p) =>
-          `<tr><td data-label="Nome" title="${p.nome}"><b>${p.nome}</b></td><td data-label="Função"><select class="funcao-select" title="${p.funcao}" onchange="updatePersonFuncao('${p.id}', this)">${funcoesOptionsHtml(p.funcao)}</select></td><td data-label="Nº">${p.numero}</td><td data-label="Código QR" title="${p.codigo}">${p.codigo}</td><td data-label="Estado"><span class="badge ${p.ativo ? "" : "off"}">${p.ativo ? "Ativo" : "Concluído"}</span></td><td data-label="QR" class="td-qr"><button type="button" class="btn-sm btn-qr" onclick="viewQRCode('${p.id}')">Ver QR</button></td><td data-label="Ações"><div class="actions-cell actions-cell--compact"><button type="button" class="btn-sm btn-renew" onclick="openRenewCardModal('${p.id}')">Novo cartão</button><button type="button" class="btn-sm ${p.ativo ? "btn-warn" : "btn-safe"}" onclick="toggleStatus('${p.id}')">${p.ativo ? "Concluir" : "Reativar"}</button><button type="button" class="btn-sm btn-danger" onclick="deletePerson('${p.id}')">Apagar</button></div></td></tr>`
+          `<tr><td data-label="Nome" title="${escapeHtml(p.nome)}"><div class="pessoa-nome-cell"><button type="button" class="btn-icon btn-edit-nome" title="Editar nome" aria-label="Editar nome" onclick="editPersonNome('${p.id}')">✎</button><b>${escapeHtml(p.nome)}</b></div></td><td data-label="Função"><select class="funcao-select" title="${escapeHtml(p.funcao)}" onchange="updatePersonFuncao('${p.id}', this)">${funcoesOptionsHtml(p.funcao)}</select></td><td data-label="Nº">${p.numero}</td><td data-label="Código QR" title="${escapeHtml(p.codigo)}">${escapeHtml(p.codigo)}</td><td data-label="Estado"><span class="badge ${p.ativo ? "" : "off"}">${p.ativo ? "Ativo" : "Concluído"}</span></td><td data-label="QR" class="td-qr"><button type="button" class="btn-sm btn-qr" onclick="viewQRCode('${p.id}')">Ver QR</button></td><td data-label="Ações"><div class="actions-cell actions-cell--compact"><button type="button" class="btn-sm btn-renew" onclick="openRenewCardModal('${p.id}')">Novo cartão</button><button type="button" class="btn-sm ${p.ativo ? "btn-warn" : "btn-safe"}" onclick="toggleStatus('${p.id}')">${p.ativo ? "Concluir" : "Reativar"}</button><button type="button" class="btn-sm btn-danger" onclick="deletePerson('${p.id}')">Apagar</button></div></td></tr>`
       )
       .join("") ||
     `<tr><td colspan="7">${state.pessoas.length ? "Nenhuma pessoa encontrada." : "Sem pessoas."}</td></tr>`;

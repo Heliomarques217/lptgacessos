@@ -474,6 +474,40 @@ button.btn-sm.btn-safe{
   padding:6px 8px;
   font-size:11px;
 }
+.pessoa-nome-cell{
+  display:flex;
+  align-items:flex-start;
+  gap:8px;
+  min-width:0;
+}
+.pessoa-nome-cell b{
+  flex:1;
+  min-width:0;
+  word-break:break-word;
+}
+button.btn-icon{
+  flex:0 0 auto;
+  width:32px;
+  height:32px;
+  min-width:32px;
+  padding:0;
+  margin:0;
+  border-radius:10px;
+  border:1px solid var(--line);
+  background:#fff;
+  color:var(--muted);
+  font-size:15px;
+  line-height:1;
+  cursor:pointer;
+}
+button.btn-icon:hover{
+  color:var(--text);
+  border-color:rgba(11,93,61,.35);
+  background:rgba(11,93,61,.06);
+}
+button.btn-edit-nome{
+  margin-top:1px;
+}
 #pessoas .glass.overflow{
   max-width:100%;
   overflow-x:auto;

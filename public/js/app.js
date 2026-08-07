@@ -441,6 +441,34 @@ async function updatePersonFuncao(id, selectEl) {
   }
 }
 
+async function editPersonNome(id) {
+  try {
+    requireSession();
+  } catch (e) {
+    alert(e.message);
+    return;
+  }
+  const p = state.pessoas.find((x) => x.id === id);
+  if (!p) return;
+  const novo = prompt("Nome completo:", p.nome);
+  if (novo === null) return;
+  const nome = novo.trim();
+  if (!nome) {
+    alert("O nome não pode ficar vazio.");
+    return;
+  }
+  if (nome === p.nome) return;
+  const anterior = p.nome;
+  try {
+    const updated = await updatePessoa(id, { nome });
+    Object.assign(p, updated);
+    logAtividade("pessoa_nome", `${anterior} → ${nome} · ${p.codigo}`);
+    render(showPersonPhoto);
+  } catch (e) {
+    alert("Erro ao alterar nome: " + e.message);
+  }
+}
+
 let renewFromId = null;
 
 function openRenewCardModal(id) {
@@ -1178,6 +1206,7 @@ Object.assign(window, {
   deletePerson,
   toggleStatus,
   updatePersonFuncao,
+  editPersonNome,
   openRenewCardModal,
   closeRenewCardModal,
   confirmRenewCard,

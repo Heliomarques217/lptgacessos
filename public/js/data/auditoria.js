@@ -96,6 +96,7 @@ export const ACAO_LABELS = {
   pessoa_criada: "Pessoa adicionada",
   pessoa_apagada: "Pessoa apagada",
   pessoa_funcao: "Função alterada",
+  pessoa_nome: "Nome alterado",
   pessoa_estado: "Estado do cartão",
   cartao_novo: "Novo cartão",
   entrada_validada: "Entrada validada",

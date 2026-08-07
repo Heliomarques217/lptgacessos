@@ -52,6 +52,7 @@ export async function updatePessoa(id, patch) {
   const row = {};
   if (patch.ativo !== undefined) row.ativo = patch.ativo;
   if (patch.funcao !== undefined) row.funcao = patch.funcao;
+  if (patch.nome !== undefined) row.nome = String(patch.nome).trim();
   if (patch.fotoCartao !== undefined) row.foto_cartao = patch.fotoCartao || null;
 
   if (patch.fotoCartao !== undefined) {
